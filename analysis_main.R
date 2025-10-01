@@ -8,29 +8,34 @@
 library(tidyverse)
 library(psych)      
 library(ggplot2)  
-library(readxl)      
-
+library(readxl) 
 
 # Set working directory 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
-# Upload Data
-wave1 <- read.csv("data/raw/wave1_data.csv", stringsAsFactors = FALSE)
-wave2 <- read.csv("data/raw/wave2_data.csv", stringsAsFactors = FALSE)
+# Load functions script
+source("functions.R")
+
+# Load cleaned data 
+source("data_cleaning.R")
 
 
-### Note: Both data sets, merge datasets (or merge after?)
-
-# Data cleaning / exclusion
-  ## Consent and eligibility checks
-    ## Consent wave 1
-    table(wave1$Q5, useNA = "ifany")  # infany includes NA's
-    table(wave1$Q6, useNA = "ifany")
-    ## Consent wave 2
-    table(wave2$Q5, useNA = "ifany")
-    table(wave2$Q6, useNA = "ifany")
     
-    ### Note: Still write something about this. 
+
+  ## Consent and eligibility checks
+    ## Consent 
+      freq_table(wave1[-c(1:2), ], "Q5") ### change names questions here
+      freq_table(wave1[-c(1:2), ], "Q6")
+      freq_table(wave2[-c(1:2), ], "Q5")
+      freq_table(wave2[-c(1:2), ], "Q6")
+      
+    ## Delete participants not from NL or DE 
+      freq_table(wave1[-c(1:2), ], "Q29")
+      freq_table(wave2[-c(1:2), ], "Q15")
+    
+  ## Save dataset excluding those who do not consent
+      
+      
   ## Outlier inspection
   ## Data preparation 
 
