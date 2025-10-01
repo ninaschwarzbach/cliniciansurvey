@@ -1,0 +1,34 @@
+# ---- Data files ----
+data/
+*.csv
+*.sav
+*.xlsx
+*.xls
+*.tsv
+*.dat
+*.rds
+*.RData
+
+# ---- R specific ----
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+
+# ---- OS specific ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Other ----
+*.log
+*.tmp
+*.bak
+
+# ---- Sensitive ----
+*.key
+*.json
+*.yaml
+*.yml
+*.env
+
