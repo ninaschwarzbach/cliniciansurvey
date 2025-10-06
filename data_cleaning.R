@@ -31,15 +31,19 @@
     questions_wave1 <- wave1[1, ]
     questions_wave2 <- wave2[1, ]
     
+  ## Delete Questions from dataset
+    wave1 <- wave1[-c(1:2), ]
+    wave2 <- wave2[-c(1:2), ]
+    
   ## Remove those that did not consent 
     # Frequencies 
-      freq_table(wave1[-c(1:2), ], "Q5") 
-      freq_table(wave1[-c(1:2), ], "Q6")
-      freq_table(wave2[-c(1:2), ], "Q5")
-      freq_table(wave2[-c(1:2), ], "Q6")
+      freq_table(wave1, "Q5") 
+      freq_table(wave1, "Q6")
+      freq_table(wave2, "Q5")
+      freq_table(wave2, "Q6")
       
-      n_beforeconsent_wave1 <- nrow(wave1[-c(1:2), ]); n_beforeconsent_wave1 ### delete these again from environment
-      n_beforeconsent_wave2 <- nrow(wave2[-c(1:2), ]); n_beforeconsent_wave2
+      n_beforeconsent_wave1 <- nrow(wave1); n_beforeconsent_wave1 ### delete these again from environment
+      n_beforeconsent_wave2 <- nrow(wave2); n_beforeconsent_wave2
     
     # Relabel options
       wave1$Q5 <- ifelse(grepl("^\\s*Yes", wave1$Q5, ignore.case = TRUE), "yes", wave1$Q5)
@@ -53,17 +57,37 @@
       wave2 <- wave2 %>%
         filter(Q5 == "yes" & Q6 == "yes")
       
-      n_afterconsent_wave1 <- nrow(wave1[-c(1:2), ]); n_afterconsent_wave1
-      n_afterconsent_wave2 <- nrow(wave2[-c(1:2), ]); n_afterconsent_wave2
+      n_afterconsent_wave1 <- nrow(wave1); n_afterconsent_wave1
+      n_afterconsent_wave2 <- nrow(wave2); n_afterconsent_wave2
       
     # Check how many were removed
       cat("Wave 1 removed:", n_beforeconsent_wave1 - n_afterconsent_wave1, "cases\n")
       cat("Wave 2 removed:", n_beforeconsent_wave2 - n_afterconsent_wave2, "cases\n")
+      
+      
+  ## Exclude those that only filled in demographics
+    # Mark participants to exclude
+      wave1$exclude <- is.na(wave1$Q11_1) & is.na(wave1$Q11_2) & is.na(wave1$Q11_3)
+      wave2$exclude <- is.na(wave2$Q16_1) & is.na(wave2$Q16_2) & is.na(wave2$Q16_3)
+      
+    # Count how many are incomplete
+      n_incomplete_wave1 <- sum(wave1$exclude);  n_incomplete_wave1 
+      n_incomplete_wave2 <- sum(wave2$exclude);  n_incomplete_wave2
+      n_complete_wave1 <- nrow(wave1[!wave1$exclude, ]);  n_complete_wave1 
+      n_complete_wave2 <- nrow(wave1[!wave2$exclude, ]);  n_complete_wave2
+      
+    # Remove incomplete participants
+      wave1 <- wave1[!wave1$exclude, ]
+      wave2 <- wave2[!wave2$exclude, ]
+      
+    # Check how many were removed
+      cat("Wave 1 removed:", n_incomplete_wave1, "cases\n")
+      cat("Wave 2 removed:", n_incomplete_wave2, "cases\n")
     
   ## Delete participants not from NL or DE 
     # Frequencies 
-      freq_table(wave1[-c(1:2), ], "Q29")
-      freq_table(wave2[-c(1:2), ], "Q15")
+      freq_table(wave1, "Q29")
+      freq_table(wave2, "Q15")
       
     # Remove participants 
       wave1 <- wave1 %>%
@@ -71,18 +95,57 @@
       wave2 <- wave2 %>%
         filter(Q15 %in% c("Netherlands", "Germany"))
       
-      n_aftercountry_wave1 <- nrow(wave1[-c(1:2), ]);  n_aftercountry_wave1
-      n_aftercountry_wave2 <- nrow(wave2[-c(1:2), ]);  n_aftercountry_wave2
+      n_aftercountry_wave1 <- nrow(wave1);  n_aftercountry_wave1
+      n_aftercountry_wave2 <- nrow(wave2);  n_aftercountry_wave2
       
     # Check how many were removed
-      cat("Wave 1 removed:", n_afterconsent_wave1 - n_aftercountry_wave1, "cases\n")
-      cat("Wave 2 removed:", n_afterconsent_wave2 - n_aftercountry_wave2, "cases\n")
+      cat("Wave 1 removed:", n_complete_wave1 - n_aftercountry_wave1, "cases\n")
+      cat("Wave 2 removed:", n_complete_wave2 - n_aftercountry_wave2, "cases\n")
+      
       
   ## Exclude those in wave 2 that participated in the previous wave
+    # Combine the two columns into one vector
+      combined <- c(wave1$Q23, wave2$Q48)
+      
+    # Remove NAs 
+      combined <- combined[!is.na(combined)]
+      
+    # Check for duplicates
+      duplicated_values <- combined[duplicated(combined)]
+      unique_duplicates <- unique(duplicated_values); unique_duplicates
+      
+    # Find indices of each duplicated value
+      # For "1234567"
+        which(wave1$Q23 == "1234567")   
+        which(wave2$Q48 == "1234567")  
+        
+        # Check demographics
+          wave1[which(wave1$Q23 == "1234567"), c("Q8","Q9", "Q10", "Q29", "Q16")] 
+          wave2[which(wave2$Q48 == "1234567"), c("Q12","Q13","Q14", "Q15")] 
+      
+      # For "nvt"
+        which(wave1$Q23 == "nvt")
+        which(wave2$Q48 == "nvt")
+        
+        # Check demographics
+          wave1[which(wave1$Q23 == "nvt"), c("Q8","Q9", "Q10", "Q29", "Q16")] 
+      
+      # For "1111111"
+        which(wave1$Q23 == "1111111")
+        which(wave2$Q48 == "1111111")
+        
+        # Check demographics
+          wave2[which(wave2$Q48 == "1111111"), c("Q12","Q13","Q14", "Q15")] 
       
   ## Remove from environment
-      rm()
-    
+      rm(combined, duplicated_values, n_afterconsent_wave1, n_afterconsent_wave2, n_aftercountry_wave1, n_aftercountry_wave2, 
+         n_beforeconsent_wave1, n_beforeconsent_wave2, n_complete_wave1, n_complete_wave2, n_incomplete_wave1, n_incomplete_wave2,
+         unique_duplicates)
+      
+  ## Remove from dataset
+      wave1 <- wave1 %>% select(-exclude)
+      wave2 <- wave2 %>% select(-exclude)
+      
   ## Rename rows for consistency
     ## Wave 1 
       wave1 <- wave1 %>%
@@ -165,7 +228,7 @@
         unmatched_cols <- colnames(wave2)[is.na(wave2_new_names)]
         
         ## Remove from environment
-          rm(matched_idx, unmatched_cols, wave1_names, wave2_new_names, wave1_questions, questions_wave1, questions_wave2)
+          rm(matched_idx, unmatched_cols, wave1_names, wave2_new_names, wave1_questions)
         
       # Rename unmatched cols
         wave2 <- wave2 %>%
@@ -305,4 +368,7 @@
               ))      
             
 # Reverse Coding 
-  ## 
+  ### continue here, look for items to be reverse coded ...
+
+            
+# Filling in Slider Values for NA's

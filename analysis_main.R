@@ -24,14 +24,7 @@ source("data_cleaning.R")
 
   ## Consent and eligibility checks
     ## Consent 
-      freq_table(wave1[-c(1:2), ], "Q5") ### change names questions here
-      freq_table(wave1[-c(1:2), ], "Q6")
-      freq_table(wave2[-c(1:2), ], "Q5")
-      freq_table(wave2[-c(1:2), ], "Q6")
-      
-    ## Delete participants not from NL or DE 
-      freq_table(wave1[-c(1:2), ], "Q29")
-      freq_table(wave2[-c(1:2), ], "Q15")
+
     
   ## Save dataset excluding those who do not consent
       
