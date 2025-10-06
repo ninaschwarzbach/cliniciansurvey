@@ -25,9 +25,64 @@
   ## Delete items that are not needed
     wave1 <- wave1[, -c(1,2,3,4,8,9,10,11,12,13,14,15,16,53,68)] ### make this simpler later
     wave2 <- wave2[, -c(1,2,3,4,8,9,10,11,12,13,14,15,16, 20, 109, 110, 111, 112)] ### make this simpler later, also check deleted items analysis plan
-  ## Exclude those in wave 2 that participated in the previous wave
-    ### to do 
 
+
+  ## Extract first row (questions) from wave1 and wave2
+    questions_wave1 <- wave1[1, ]
+    questions_wave2 <- wave2[1, ]
+    
+  ## Remove those that did not consent 
+    # Frequencies 
+      freq_table(wave1[-c(1:2), ], "Q5") 
+      freq_table(wave1[-c(1:2), ], "Q6")
+      freq_table(wave2[-c(1:2), ], "Q5")
+      freq_table(wave2[-c(1:2), ], "Q6")
+      
+      n_beforeconsent_wave1 <- nrow(wave1[-c(1:2), ]); n_beforeconsent_wave1 ### delete these again from environment
+      n_beforeconsent_wave2 <- nrow(wave2[-c(1:2), ]); n_beforeconsent_wave2
+    
+    # Relabel options
+      wave1$Q5 <- ifelse(grepl("^\\s*Yes", wave1$Q5, ignore.case = TRUE), "yes", wave1$Q5)
+      wave1$Q6 <- ifelse(grepl("^\\s*Yes", wave1$Q6, ignore.case = TRUE), "yes", wave1$Q6)
+      wave2$Q5 <- ifelse(grepl("^\\s*Yes", wave2$Q5, ignore.case = TRUE), "yes", wave2$Q5)
+      wave2$Q6 <- ifelse(grepl("^\\s*Yes", wave2$Q6, ignore.case = TRUE), "yes", wave2$Q6)
+      
+    # Remove participants 
+      wave1 <- wave1 %>%
+        filter(Q5 == "yes" & Q6 == "yes")
+      wave2 <- wave2 %>%
+        filter(Q5 == "yes" & Q6 == "yes")
+      
+      n_afterconsent_wave1 <- nrow(wave1[-c(1:2), ]); n_afterconsent_wave1
+      n_afterconsent_wave2 <- nrow(wave2[-c(1:2), ]); n_afterconsent_wave2
+      
+    # Check how many were removed
+      cat("Wave 1 removed:", n_beforeconsent_wave1 - n_afterconsent_wave1, "cases\n")
+      cat("Wave 2 removed:", n_beforeconsent_wave2 - n_afterconsent_wave2, "cases\n")
+    
+  ## Delete participants not from NL or DE 
+    # Frequencies 
+      freq_table(wave1[-c(1:2), ], "Q29")
+      freq_table(wave2[-c(1:2), ], "Q15")
+      
+    # Remove participants 
+      wave1 <- wave1 %>%
+        filter(Q29 %in% c("Netherlands", "Germany"))
+      wave2 <- wave2 %>%
+        filter(Q15 %in% c("Netherlands", "Germany"))
+      
+      n_aftercountry_wave1 <- nrow(wave1[-c(1:2), ]);  n_aftercountry_wave1
+      n_aftercountry_wave2 <- nrow(wave2[-c(1:2), ]);  n_aftercountry_wave2
+      
+    # Check how many were removed
+      cat("Wave 1 removed:", n_afterconsent_wave1 - n_aftercountry_wave1, "cases\n")
+      cat("Wave 2 removed:", n_afterconsent_wave2 - n_aftercountry_wave2, "cases\n")
+      
+  ## Exclude those in wave 2 that participated in the previous wave
+      
+  ## Remove from environment
+      rm()
+    
   ## Rename rows for consistency
     ## Wave 1 
       wave1 <- wave1 %>%
@@ -86,11 +141,6 @@
           Feedback_Text2 = Q22, 
           Participant_ID = Q23
         )
-      ## Wave 2
-        # Extract first row (questions) from wave1 and wave2
-          questions_wave1 <- wave1[1, ]
-          questions_wave2 <- wave2[1, ]
-        
         # Create a named vector for already renamed wave1 columns
           wave1_names <- colnames(wave1)
           wave1_questions <- as.character(questions_wave1)
@@ -208,24 +258,15 @@
             Participant_ID = Q48
           )
         
-# Investigating double questions in Wave 2: University Education and AttitudeEBMH4
-  ## Check consistency in answers
-        # AttitudeEBMH4
-          res_att <- merge_pair(wave2, "AttitudeEBMH4", "AttitudeEBMH4_1", "AttitudeEBMH4_merged")
-          wave2 <- res_att$df
-          res_att$summary %>% print()
-        # UniversityEducation 
-          res_uni <- merge_pair(wave2, "UniversityEducation_1", "UniversityEducation_2", "UniversityEducation_merged")
-          wave2 <- res_uni$df
-          res_uni$summary %>% print()
-  ## Convert to numbers
+  ## Double questions in Wave 2: University Education and AttitudeEBMH4
+    # Convert to numbers
         # AttitudeEBMH4
           wave2$AttitudeEBMH4_num <- likert_to_num(wave2$AttitudeEBMH4)
           wave2$AttitudeEBMH4_1_num <- likert_to_num(wave2$AttitudeEBMH4_1)
-        # UniversityEducation 
+          # UniversityEducation
           wave2$UniversityEducation_1_num <- likert_to_num(wave2$UniversityEducation_1)
           wave2$UniversityEducation_2_num <- likert_to_num(wave2$UniversityEducation_2)
-  ## Check differences
+    # Check differences
         # AttitudeEBMH4
           # Calculate absolute difference for AttitudeEBMH4
             wave2$AttitudeEBMH4_diff <- abs(wave2$AttitudeEBMH4_num - wave2$AttitudeEBMH4_1_num)
@@ -242,7 +283,26 @@
               filter(!is.na(UniversityEducation_1_num) & !is.na(UniversityEducation_2_num) & UniversityEducation_diff > 0) %>%
               select(UniversityEducation_1, UniversityEducation_2, UniversityEducation_1_num, UniversityEducation_2_num, UniversityEducation_diff)
             
-          ## Remove from environment
-            rm(res_att, res_uni, AttitudeEBMH4_discrepancies, UniversityEducation_discrepancies) ### also remove extra variables again, continue here with merging the items, function needed
-          
-# Reverse Coding      
+    # Merge Variables
+        # AttitudeEBMH4
+            wave2 <- merge_likert_numeric(wave2, "AttitudeEBMH4", "AttitudeEBMH4_1", "AttitudeEBMH4_merged", likert_map)
+            
+        # UniversityEducation 
+            wave2 <- merge_likert_numeric(wave2, "UniversityEducation_1", "UniversityEducation_2", "UniversityEducation_merged", likert_map)  
+            
+    # Remove from environment
+            rm(AttitudeEBMH4_discrepancies, UniversityEducation_discrepancies) 
+            
+    # Remove extra columns from wave2
+            wave2 <- wave2 %>%
+              select(-c(
+                AttitudeEBMH4_num,
+                AttitudeEBMH4_1_num,
+                UniversityEducation_1_num,
+                UniversityEducation_2_num,
+                AttitudeEBMH4_diff,
+                UniversityEducation_diff
+              ))      
+            
+# Reverse Coding 
+  ## 
