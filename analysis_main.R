@@ -9,6 +9,7 @@ library(tidyverse)
 library(psych)      
 library(ggplot2)  
 library(readxl) 
+library(dplyr)
 
 # Set working directory 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))

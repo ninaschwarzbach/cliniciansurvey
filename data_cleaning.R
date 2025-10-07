@@ -368,7 +368,34 @@
               ))      
             
 # Reverse Coding 
-  ### continue here, look for items to be reverse coded ...
+  wave1$AttitudeEBMH3 <- reverse_likert_text(wave1$AttitudeEBMH3)
+  wave2$AttitudeEBMH3 <- reverse_likert_text(wave2$AttitudeEBMH3)
+  wave2$PerceptionGap2 <- reverse_likert_text(wave2$PerceptionGap2)
 
             
 # Filling in Slider Values for NA's
+  # Define slider columns 
+    sliders_w1 <- c(
+      "SchoolSliderCBT","SchoolSliderPsychodynamic","SchoolSliderAnalytical",
+      "SchoolSliderSystemic","SchoolSliderNeuropsychology","SchoolSliderPersonCentered",
+      "SchoolSliderACT","SchoolSliderOther"
+    )
+    
+    sliders_w2 <- c(
+      "SchoolSliderCBT","SchoolSliderPsychodynamic","SchoolSliderPsychodynamic_PsychDisorders",
+      "SchoolSliderSystemic","SchoolSliderNeuropsychology","SchoolSliderPersonCentered",
+      "SchoolSliderACT","SchoolSliderHumanistic","SchoolSliderMBT","SchoolSliderOther"
+    )
+    
+  # Change NA's into 0's
+    wave1 <- fill_na(wave1, sliders_w1, forced_col = "SchoolForcedChoice")
+    wave2 <- fill_na(wave2, sliders_w2, forced_col = "SchoolForcedChoice")
+    
+  # Check
+    cat("Wave1: forced-choice answered:", sum(!is.na(wave1$SchoolForcedChoice)), "rows\n")
+    cat("Wave2: forced-choice answered:", sum(!is.na(wave2$SchoolForcedChoice)), "rows\n")
+
+# Cleaning work experience, Graduation year
+    # Graduation Year non-numeric values
+        
+      ### continue here

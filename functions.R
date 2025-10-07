@@ -3,8 +3,6 @@
 # Start date: 01.10.2025
 # Date last updated: 
 
-library(dplyr)
-
 # Data Cleaning
     
  ## Function for transforming Likert (5 point) to numbers
@@ -41,12 +39,63 @@ library(dplyr)
     likert_map <- c(
       "Strongly disagree" = 1,
       "Disagree" = 2,
-      "Neutral" = 3,
+      "Neither Agree nor Disagree" = 3,
       "Agree" = 4,
       "Strongly agree" = 5
     )
+  
+  # Likert Levels 
+    likert_levels <- c(
+      "Strongly disagree",
+      "Disagree",
+      "Neither Agree nor Disagree",
+      "Agree",
+      "Strongly agree"
+    )
     
-
+  # Define reversed order
+    likert_reversed <- rev(likert_levels)
+    
+  # Function to reverse text-based Likert scales
+    reverse_likert_text <- function(x) {
+      factor(x, levels = likert_levels, labels = likert_reversed)
+    }
+    
+  # Function to replace NA -> 0 only when forced-choice is answered
+      fill_na <- function(df, slider_cols, forced_col) {
+        slider_cols <- slider_cols[slider_cols %in% colnames(df)]
+        if (length(slider_cols) == 0) {
+          message("No slider columns found.")
+          return(df)
+        }
+        if (! (forced_col %in% colnames(df))) stop("Forced column not found: ", forced_col)
+        
+        # Flag rows where forced choice was answered
+        forced_answered <- !is.na(df[[forced_col]]) & df[[forced_col]] != ""
+        
+        # Report before
+        before <- sapply(df[slider_cols], function(x) sum(is.na(x)))
+        message("NAs before (per slider):")
+        print(before)
+        
+        # Loop slider-by-slider to avoid assignment shape issues
+        for (colname in slider_cols) {
+          # convert to numeric safely (if already numeric, this keeps it)
+          df[[colname]] <- suppressWarnings(as.numeric(as.character(df[[colname]])))
+          # Only replace NA -> 0 where SchoolForcedChoice was answered
+          df[[colname]][forced_answered & is.na(df[[colname]])] <- 0
+        }
+        
+        # Report after
+        after <- sapply(df[slider_cols], function(x) sum(is.na(x)))
+        message("NAs after (per slider):")
+        print(after)
+        
+        # return modified df
+        df
+      }
+      
+    
 # Descriptives
   ##  Function for frequency table
     freq_table <- function(data, col) {
