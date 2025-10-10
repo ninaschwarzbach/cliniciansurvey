@@ -11,6 +11,7 @@ library(ggplot2)
 library(readxl) 
 library(dplyr)
 
+
 # Set working directory 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
@@ -20,22 +21,9 @@ source("functions.R")
 # Load cleaned data 
 source("data_cleaning.R")
 
-
-    
-
-  ## Consent and eligibility checks
-    ## Consent 
-
-    
-  ## Save dataset excluding those who do not consent
-      
-      
-  ## Outlier inspection
-  ## Data preparation 
+## Outlier inspection
 
 ### Note: Check levels of variables, Maybe make lists with different levels of variables? Also merge items into variables. 
-
-  ## Duplicate participants
 
 # Sample characteristics
   ## Age, gender, education, years of experience, country

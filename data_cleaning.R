@@ -315,9 +315,9 @@
             WorkplaceInfluences5 = Q41_8,              
             EmployerInfluences7 = Q41_9,              
             UniversityEducation_2 = Q42_3, 
-            MainObstacleEBMH = Q43, 
-            NeedsEMBH_PsychDisorders = Q44, 
-            ReasonsNotEBMH = Q45, 
+            MainObstacleEBMH_TEXT = Q43, 
+            NeedsEMBH_PsychDisorders_TEXT = Q44, 
+            ReasonsNotEBMH_TEXT = Q45, 
             Participant_ID = Q48
           )
         
@@ -397,5 +397,115 @@
 
 # Cleaning work experience, Graduation year
     # Graduation Year non-numeric values
+      # Wave 1
+        non_numeric_graduation_wave1 <- wave1[!grepl("^\\d+$", trimws(wave1$GraduationYear)) & 
+                                          !is.na(wave1$GraduationYear), "GraduationYear"]; non_numeric_graduation_wave1
         
-      ### continue here
+        # Remame individually
+          wave1 <- wave1 %>%
+            mutate(
+              GraduationYear = case_when(
+                GraduationYear == "Studium Ende: 2018" ~ "2018",
+                GraduationYear == "GZ opleiding in 2020, master in 2016" ~ "2016",
+                GraduationYear == "2016 (Approbation)" ~ "2016",
+                GraduationYear == "2009 Universiteit, 2014 als GZ-psycholoog" ~ "2009",
+                GraduationYear == "2013 aan de uni, 2020 GZ-psycholoog" ~ "2013",
+                GraduationYear == "2022 (Psychologische Psychotherapie Weiterbildung)" ~ "2022",
+                GraduationYear == "2025/ Noch nicht beendet" ~ "2025",
+                GraduationYear == "Orthopedagoog 2015, GZ-psycholoog 2022" ~ "2015",
+                TRUE ~ GraduationYear
+              )
+            )
+      
+      # Wave 2
+        non_numeric_graduation_wave2 <- wave2[!grepl("^\\d+$", trimws(wave2$GraduationYear)) & 
+                                          !is.na(wave2$GraduationYear), "GraduationYear"]; non_numeric_graduation_wave2 
+        
+        # Remame individually 
+          wave2 <- wave2 %>%
+            mutate(
+              GraduationYear = case_when(
+                GraduationYear == "1997 / 2010 / 2023" ~ "1997",  
+                GraduationYear == "unklar" ~ NA_character_,
+                GraduationYear == "2015 als GZ, 2008 als psycholoog" ~ "2008",
+                GraduationYear == "2014 (GZ), 2021 (PT)" ~ "2014",
+                GraduationYear == "Deutschland" ~ NA_character_,
+                trimws(GraduationYear) %in% c("", "NA", "N/A", "na") ~ NA_character_,
+                TRUE ~ GraduationYear
+              )
+            )
+      
+    # Years of Experience non-numeric values
+      # Wave 1
+        non_numeric_experience_wave1 <- wave1[!grepl("^\\d+$", trimws(wave1$YearsExperience)) & 
+                                          !is.na(wave1$YearsExperience), "YearsExperience"]; non_numeric_experience_wave1
+        
+        # Remame individually 
+          wave1 <- wave1 %>%
+            mutate(
+              YearsExperience = gsub(",", ".", YearsExperience),  # Replace comma with dot
+              YearsExperience = case_when(
+                YearsExperience %in% c("7 jaar") ~ "7",
+                YearsExperience %in% c("4.5 jaar") ~ "4.5",
+                YearsExperience == "13 (waarvan 9 als GZ-psycholoog)" ~ "13",
+                YearsExperience == "'+/- 25" ~ "25",
+                YearsExperience == "16 jaar" ~ "16",
+                YearsExperience == "21 jaar" ~ "21",
+                YearsExperience == "30 jaar" ~ "30",
+                trimws(YearsExperience) %in% c("", "NA", "N/A", "na") ~ NA_character_,
+                TRUE ~ YearsExperience  # Keep other values as-is
+              ),
+              YearsExperience = as.numeric(YearsExperience)  # Convert to numeric
+            )
+        
+      # Wave 2  
+        non_numeric_experience_wave2 <- wave2[!grepl("^\\d+$", trimws(wave2$YearsExperience)) & 
+                                          !is.na(wave2$YearsExperience), "YearsExperience"]; non_numeric_experience_wave2
+        
+        # Remame individually 
+          wave2 <- wave2 %>%
+            mutate(
+              YearsExperience = gsub(",", ".", YearsExperience),  # Replace comma with dot for decimal numbers
+              YearsExperience = case_when(
+                YearsExperience %in% c("23 jaar") ~ "23",
+                YearsExperience %in% c("30 Jahr", "> 30 J.") ~ "30",
+                YearsExperience %in% c("ongeveer 15 jaar") ~ "15",
+                YearsExperience %in% c("37 Jahre") ~ "37",
+                YearsExperience %in% c("mehr als 20", "Über 25") ~ "25",  # Approximate to a reasonable value
+                trimws(YearsExperience) %in% c("", "NA", "N/A", "na") ~ NA_character_,
+                TRUE ~ YearsExperience  # Keep other values (e.g., "2.5", "1.5", "4.5") as-is
+              ),
+              YearsExperience = as.numeric(YearsExperience)  # Convert to numeric
+            )
+          
+      # Remove from environment
+        rm(non_numeric_experience_wave1, non_numeric_experience_wave2, non_numeric_graduation_wave1, non_numeric_graduation_wave2, sliders_w1, sliders_w2)
+
+# Remove other professions wave 2
+  
+# Check Degrees
+                
+# Outlier detection 
+  # Years Experience 
+    # Boxplot
+      # Wave 1
+      # Wave 2
+    # IQR 
+      # Wave 1
+      # Wave 2
+  # Year Graduation 
+  # Age 
+        
+        
+# Separate Qualitative Data
+  quali_wave1 <- wave1 %>%
+    select(contains("TEXT"))
+  quali_wave2 <- wave2 %>%
+    select(contains("TEXT"))
+  
+# Separate Quantitative Data
+  quanti_wave1 <- wave1 %>%
+    select(-contains("TEXT"))
+  quanti_wave2 <- wave2 %>%
+    select(-contains("TEXT"))
+        
