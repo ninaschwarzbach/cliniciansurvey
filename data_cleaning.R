@@ -114,7 +114,7 @@
       duplicated_values <- combined[duplicated(combined)]
       unique_duplicates <- unique(duplicated_values); unique_duplicates
       
-    # Find indices of each duplicated value
+    # Find indices of each duplicated value ### check whether they said they participated before 
       # For "1234567"
         which(wave1$Q23 == "1234567")   
         which(wave2$Q48 == "1234567")  
@@ -399,7 +399,7 @@
     # Graduation Year non-numeric values
       # Wave 1
         non_numeric_graduation_wave1 <- wave1[!grepl("^\\d+$", trimws(wave1$GraduationYear)) & 
-                                          !is.na(wave1$GraduationYear), "GraduationYear"]; non_numeric_graduation_wave1
+                                          !is.na(wave1$GraduationYear), "GraduationYear"]
         
         # Remame individually
           wave1 <- wave1 %>%
@@ -419,7 +419,7 @@
       
       # Wave 2
         non_numeric_graduation_wave2 <- wave2[!grepl("^\\d+$", trimws(wave2$GraduationYear)) & 
-                                          !is.na(wave2$GraduationYear), "GraduationYear"]; non_numeric_graduation_wave2 
+                                          !is.na(wave2$GraduationYear), "GraduationYear"]
         
         # Remame individually 
           wave2 <- wave2 %>%
@@ -438,7 +438,7 @@
     # Years of Experience non-numeric values
       # Wave 1
         non_numeric_experience_wave1 <- wave1[!grepl("^\\d+$", trimws(wave1$YearsExperience)) & 
-                                          !is.na(wave1$YearsExperience), "YearsExperience"]; non_numeric_experience_wave1
+                                          !is.na(wave1$YearsExperience), "YearsExperience"]
         
         # Remame individually 
           wave1 <- wave1 %>%
@@ -460,7 +460,7 @@
         
       # Wave 2  
         non_numeric_experience_wave2 <- wave2[!grepl("^\\d+$", trimws(wave2$YearsExperience)) & 
-                                          !is.na(wave2$YearsExperience), "YearsExperience"]; non_numeric_experience_wave2
+                                          !is.na(wave2$YearsExperience), "YearsExperience"]
         
         # Remame individually 
           wave2 <- wave2 %>%
@@ -482,17 +482,60 @@
         rm(non_numeric_experience_wave1, non_numeric_experience_wave2, non_numeric_graduation_wave1, non_numeric_graduation_wave2, sliders_w1, sliders_w2)
 
 # Remove other professions wave 2
-  
-# Check Degrees
+  # Check "other" option
+    wave2 %>%
+      filter(ProfessionalBackground == "other, namely") %>%
+      select(ProfessionalBackground_TEXT)
+    
+  # Delete cases 
+    wave2 <- wave2 %>%
+      filter(
+        !ProfessionalBackground_TEXT %in% c(
+          "Erziehungswissenschaften",
+          "GGZ VS",
+          "verpleegkundig specialist ggz (MANP)",
+          "verpleegkundig specialist GGZ",
+          "Psychiatrisch Verpleegkundige"
+        )
+      )
+    
+# Remove those with Bachelor's Degree or equivalent and High School Degree or equivalent  
+    wave1 <- wave1 %>%
+      filter(!Degree %in% c("Bachelor's Degree or equivalent", "High School Degree or equivalent"))
+    wave2 <- wave2 %>%
+      filter(!Degree %in% c("Bachelor's Degree or equivalent", "High School Degree or equivalent"))
                 
 # Outlier detection 
-  # Years Experience 
+  # Years Experience ### also remove those with less than 1 year experience
     # Boxplot
-      # Wave 1
-      # Wave 2
-    # IQR 
-      # Wave 1
-      # Wave 2
+      # Combine wave1 and wave2 into one dataset
+        combined <- bind_rows(
+          wave1 %>% select(Participant_ID, YearsExperience) %>% mutate(Wave = "Wave 1"),
+          wave2 %>% select(Participant_ID, YearsExperience) %>% mutate(Wave = "Wave 2")
+        )
+        
+      # Make side-by-side boxplots
+        boxplot_experience <-ggplot(combined, aes(x = Wave, y = YearsExperience, fill = Wave)) +
+          geom_boxplot(color = "darkblue") +
+          labs(
+            title = "Boxplot of Years of Experience by Wave",
+            y = "Years of Experience",
+            x = "Wave"
+          ) +
+          theme_minimal() +
+          scale_fill_manual(values = c("skyblue", "lightgreen")); boxplot_experience 
+        
+      # Compute z-scores
+        combined <- combined %>%
+          mutate(YearsExperience_z = scale(YearsExperience)[,1],
+                 YearsExperience_outlier = abs(YearsExperience_z) > 3.29)
+        
+      # Inspect flagged cases
+        outliers <- combined %>% filter(YearsExperience_outlier); outliers ### continue here, investigate outlier, then continue wiht different outliers
+        
+      # Remove 
+        rm(combined)
+        
   # Year Graduation 
   # Age 
         
