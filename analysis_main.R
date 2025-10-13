@@ -21,14 +21,9 @@ source("functions.R")
 # Load cleaned data 
 source("data_cleaning.R")
 
-## Outlier inspection
-
-### Note: Check levels of variables, Maybe make lists with different levels of variables? Also merge items into variables. 
-
 # Sample characteristics
   ## Age, gender, education, years of experience, country
   ## Work setting, therapy length, profession
-  ## Compare waves
 
 # Descriptive statistics
   ## Item-level descriptive stats: mean, SD, skew, kurtosis

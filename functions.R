@@ -106,4 +106,40 @@
     }
   
   
-# Plots? 
+# Plots
+  # Theme
+    theme_plots <- function() {
+      theme_minimal(base_size = 13, base_family = "sans") +
+        theme(
+          plot.title = element_text(size = 16, hjust = 0.5),
+          axis.title = element_text(size = 14),
+          axis.text = element_text(size = 14),
+          legend.position = "none",
+          panel.grid.major = element_line(color = "gray90"),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          plot.margin = margin(10, 10, 10, 10)
+        )
+    }
+    
+  # Save plots
+    save_plot <- function(plot, filename, folder = "plots", width = 8, height = 6, dpi = 300) {
+      # Create folder if it doesn’t exist
+      if (!dir.exists(folder)) dir.create(folder, recursive = TRUE)
+      
+      # Apply consistent theme and save
+      final_plot <- plot + theme_plots()
+      
+      # Save to file (PNG by default)
+      ggsave(
+        filename = file.path(folder, paste0(filename, ".png")),
+        plot = final_plot,
+        width = width,
+        height = height,
+        dpi = dpi
+      )
+      
+      message("✅ Plot saved to: ", file.path(folder, paste0(filename, ".png")))
+      return(final_plot)
+    }
+    

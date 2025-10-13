@@ -42,7 +42,7 @@
       freq_table(wave2, "Q5")
       freq_table(wave2, "Q6")
       
-      n_beforeconsent_wave1 <- nrow(wave1); n_beforeconsent_wave1 ### delete these again from environment
+      n_beforeconsent_wave1 <- nrow(wave1); n_beforeconsent_wave1 
       n_beforeconsent_wave2 <- nrow(wave2); n_beforeconsent_wave2
     
     # Relabel options
@@ -329,6 +329,7 @@
           # UniversityEducation
           wave2$UniversityEducation_1_num <- likert_to_num(wave2$UniversityEducation_1)
           wave2$UniversityEducation_2_num <- likert_to_num(wave2$UniversityEducation_2)
+          
     # Check differences
         # AttitudeEBMH4
           # Calculate absolute difference for AttitudeEBMH4
@@ -364,8 +365,18 @@
                 UniversityEducation_1_num,
                 UniversityEducation_2_num,
                 AttitudeEBMH4_diff,
-                UniversityEducation_diff
-              ))      
+                UniversityEducation_diff, 
+                UniversityEducation_1, 
+                UniversityEducation_2, 
+                AttitudeEBMH4_1, 
+                AttitudeEBMH4
+              ))%>% 
+            
+    # Rename colums 
+            rename(
+              UniversityEducation = UniversityEducation_merged,
+              AttitudeEBMH4 = AttitudeEBMH4_merged
+            )   
             
 # Reverse Coding 
   wave1$AttitudeEBMH3 <- reverse_likert_text(wave1$AttitudeEBMH3)
@@ -504,17 +515,34 @@
       filter(!Degree %in% c("Bachelor's Degree or equivalent", "High School Degree or equivalent"))
     wave2 <- wave2 %>%
       filter(!Degree %in% c("Bachelor's Degree or equivalent", "High School Degree or equivalent"))
+    
+# Fix age 
+  unique(wave1$Age)
+  unique(wave2$Age)
+  wave1$Age <- as.numeric(gsub(" ?Jahre", "", trimws(wave1$Age)))
+  wave2$Age <- as.numeric(gsub(" ?Jahre", "", trimws(wave2$Age)))
+  
                 
 # Outlier detection 
-  # Years Experience ### also remove those with less than 1 year experience
-    # Boxplot
-      # Combine wave1 and wave2 into one dataset
+  # Combine wave1 and wave2 into one dataset
         combined <- bind_rows(
-          wave1 %>% select(Participant_ID, YearsExperience) %>% mutate(Wave = "Wave 1"),
-          wave2 %>% select(Participant_ID, YearsExperience) %>% mutate(Wave = "Wave 2")
+          wave1 %>% select(Participant_ID, YearsExperience, GraduationYear, Age) %>% mutate(Wave = "Wave 1"),
+          wave2 %>% select(Participant_ID, YearsExperience, GraduationYear, Age) %>% mutate(Wave = "Wave 2")
         )
         
-      # Make side-by-side boxplots
+  # Compute z-scores
+        combined <- combined %>%
+          mutate(YearsExperience_z = scale(YearsExperience)[,1],
+                 YearsExperience_outlier = abs(YearsExperience_z) > 3.29) %>%
+          mutate(GraduationYear = suppressWarnings(as.numeric(as.character(GraduationYear)))) %>%
+          mutate(GraduationYear_z = scale(GraduationYear)[,1],
+                 GraduationYear_outlier = ifelse(is.na(GraduationYear_z), FALSE, abs(GraduationYear_z) > 3.29)) %>%
+          mutate(Age = suppressWarnings(as.numeric(as.character(Age)))) %>%
+          mutate(Age_z = scale(Age)[,1],
+                 Age_outlier = ifelse(is.na(Age_z), FALSE, abs(Age_z) > 3.29))
+        
+    # Years Experience
+      #Boxplot
         boxplot_experience <-ggplot(combined, aes(x = Wave, y = YearsExperience, fill = Wave)) +
           geom_boxplot(color = "darkblue") +
           labs(
@@ -525,20 +553,59 @@
           theme_minimal() +
           scale_fill_manual(values = c("skyblue", "lightgreen")); boxplot_experience 
         
-      # Compute z-scores
-        combined <- combined %>%
-          mutate(YearsExperience_z = scale(YearsExperience)[,1],
-                 YearsExperience_outlier = abs(YearsExperience_z) > 3.29)
+        save_plot(boxplot_experience, "boxplot_years_experience")
         
       # Inspect flagged cases
-        outliers <- combined %>% filter(YearsExperience_outlier); outliers ### continue here, investigate outlier, then continue wiht different outliers
+        outliers <- combined %>% filter(YearsExperience_outlier); outliers 
+        wave1 %>%
+          filter(YearsExperience == 50) %>%
+          select(Participant_ID, Age, GraduationYear, YearsExperience)
         
-      # Remove 
-        rm(combined)
+      # Check if everyone had at least one year of experience
+        unique(wave2$Experience1Year)
         
-  # Year Graduation 
-  # Age 
+    # Year Graduation 
+      # Inspect flagged cases
+        outliers <- combined %>% filter(GraduationYear_outlier); outliers 
+      
+      # Replace 21 and 33
+        wave1$GraduationYear <- with(wave1, ifelse(GraduationYear == 21, 2021, GraduationYear))        
+        wave2$GraduationYear <- with(wave2, ifelse(GraduationYear == 33, NA, GraduationYear))     
+        combined$GraduationYear <- with(combined, ifelse(GraduationYear == 33, NA, GraduationYear)) 
+        combined$GraduationYear <- with(combined, ifelse(GraduationYear == 21, 2021, GraduationYear))    
         
+      #Boxplot
+        boxplot_grad <-ggplot(combined, aes(x = Wave, y = GraduationYear, fill = Wave)) +
+          geom_boxplot(color = "darkblue") +
+          labs(
+            title = "Boxplot of Graduation Year by Wave",
+            y = "Graduation Year",
+            x = "Wave"
+          ) +
+          theme_minimal() +
+          scale_fill_manual(values = c("skyblue", "lightgreen")); boxplot_grad
+        
+        save_plot(boxplot_grad, "boxplot_grad")
+        
+    # Age 
+      # Inspect flagged cases
+        outliers <- combined %>% filter(Age_outlier); outliers 
+      
+      #Boxplot
+        boxplot_age <-ggplot(combined, aes(x = Wave, y = Age, fill = Wave)) +
+          geom_boxplot(color = "darkblue") +
+          labs(
+            title = "Age by Wave",
+            y = "Age",
+            x = "Wave"
+          ) +
+          theme_minimal() +
+          scale_fill_manual(values = c("skyblue", "lightgreen")); boxplot_age
+
+        save_plot(boxplot_age, "boxplot_age")
+        
+  # Remove 
+    rm(combined, outliers, boxplot_age, boxplot_experience, boxplot_grad)
         
 # Separate Qualitative Data
   quali_wave1 <- wave1 %>%
@@ -547,8 +614,24 @@
     select(contains("TEXT"))
   
 # Separate Quantitative Data
-  quanti_wave1 <- wave1 %>%
+  wave1 <- wave1 %>%
     select(-contains("TEXT"))
-  quanti_wave2 <- wave2 %>%
+  wave2 <- wave2 %>%
     select(-contains("TEXT"))
-        
+
+  
+# Merge datasets
+  # Dissolve discrepancies
+    wave1$AttitudeEBMH4 <- likert_to_num(wave1$AttitudeEBMH4)
+    wave1$UniversityEducation <- likert_to_num(wave1$UniversityEducation)
+  
+  # Merge
+    data <- bind_rows(
+      wave1 %>% mutate(Wave = "Wave 1"),
+      wave2 %>% mutate(Wave = "Wave 2")
+    )
+    
+  # Delete participant ID 
+    data <- data %>% select(-c(Participant_ID, ParticipationPreviousStudy)) ### In the end, think if you need to remove more if you want to make data public 
+    
+    
