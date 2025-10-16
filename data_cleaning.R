@@ -509,6 +509,24 @@
           "Psychiatrisch Verpleegkundige"
         )
       )
+  # Rename others
+    wave2 <- wave2 %>%
+      mutate(
+        ProfessionalBackground = case_when(
+          ProfessionalBackground == "other, namely" & ProfessionalBackground_TEXT == "gz psycholoog" ~ "Psychologist",
+          ProfessionalBackground == "other, namely" & ProfessionalBackground_TEXT == "Psychologie Studium Bachelor, Systemische Familientherapeutin, Ergotherapeutin" ~ "Psychologist",
+          ProfessionalBackground == "other, namely" & ProfessionalBackground_TEXT == "GZ-psycholoog in opleiding tot klinisch psycholoog" ~ "Psychologist",
+          ProfessionalBackground == "other, namely" & ProfessionalBackground_TEXT == "Gz psychologe-psychotherapeute" ~ "Psychologist",
+          ProfessionalBackground == "other, namely" & ProfessionalBackground_TEXT == "Psychologin und approbierte psycholog. Psychotherapeutin" ~ "Psychologist",
+          ProfessionalBackground == "other, namely" & ProfessionalBackground_TEXT == "Psychologische Psychotherapeutin" ~ "Psychologist",
+          ProfessionalBackground == "other, namely" & ProfessionalBackground_TEXT == "Ärztin" ~ "Medical doctor",
+          TRUE ~ ProfessionalBackground
+        )
+      )
+    
+  # Delete social workers
+    wave2 <- wave2 %>%
+      filter(ProfessionalBackground != "social worker")
     
 # Remove those with Bachelor's Degree or equivalent and High School Degree or equivalent  
     wave1 <- wave1 %>%
@@ -563,6 +581,11 @@
         
       # Check if everyone had at least one year of experience
         unique(wave2$Experience1Year)
+        which(wave1$YearsExperience < 1)
+        wave1$YearsExperience[c(38, 152) ]
+        # Exclude those with less than 1 year
+          wave1 <- wave1[-c(38, 152), ]
+        
         
     # Year Graduation 
       # Inspect flagged cases

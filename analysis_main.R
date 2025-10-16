@@ -10,6 +10,10 @@ library(psych)
 library(ggplot2)  
 library(readxl) 
 library(dplyr)
+library(gghalves)
+library(rlang)
+library(gridExtra)
+library(stringr)
 
 
 # Set working directory 
@@ -22,10 +26,36 @@ source("functions.R")
 source("data_cleaning.R")
 
 # Sample characteristics
-  ## Age, gender, education, years of experience, country
-  ## Work setting, therapy length, profession
+  # Continuous vars
+    data$GraduationYear <- as.numeric(data$GraduationYear) # was class character
+    cont_vars <- c("Age", "YearsExperience", "GraduationYear")
+    # compute descriptives by Wave and total
+      dir.create("outputs", showWarnings = FALSE)
+      desc_table <- describe_continuous_by_group(data, cont_vars, group = "Wave", save = TRUE, file_prefix = "outputs/descriptives_continuous"); desc_table
+    
+    # Plots
+      violin_age <- split_violin_total(data, "Age", title = "Distribution of Age by Wave")
+      save_violin(violin_age, "violin_age")
+      violin_experience <- split_violin_total(data, "YearsExperience", title = "Years of Work Experience by Wave")
+      save_violin(violin_experience, "violin_experience")
+      combined_violin <- grid.arrange(violin_age, violin_experience, ncol = 2)
+      ggsave(
+        "plots/violin_combined.png",
+        combined_violin,
+        width = 10,  
+        height = 5,   
+        dpi = 300
+      )
+
+  # Categorical vars
+    cat_vars <- c("GenderIdentity", "Degree", "Country", "WorkSetting", "LengthTrajectory", "ProfessionalBackground")
+    cat_table <- describe_categorical(data, cat_vars,group = "Wave", include_na = FALSE, file_prefix = "Table2_Categorical",out_folder = "outputs", pct_digits = 1); cat_table     
+    
 
 # Descriptive statistics
+    
+    ### continue here, use functions for describing continuous variables 
+    
   ## Item-level descriptive stats: mean, SD, skew, kurtosis
   ## Identify floor/ceiling effects or low variance items
 
