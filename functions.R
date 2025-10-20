@@ -270,17 +270,25 @@
         tryCatch({
           file.remove(out_fname)
         }, warning = function(w) {
-          message("⚠️ Could not remove existing file (perhaps it's open in Excel?): ", out_fname)
+          message("Could not remove existing file (perhaps it's open in Excel?): ", out_fname)
         }, error = function(e) {
-          message("⚠️ Error removing existing file: ", e$message)
+          message("Error removing existing file: ", e$message)
         })
       }
       
       write.csv(wide_tbl, out_fname, row.names = FALSE)
-      message("✅ Wide categorical table saved to: ", out_fname)
+      message("Wde categorical table saved to: ", out_fname)
       
       return(wide_tbl)
-    }
+      }
+    
+    # Function to identify floor and ceiling effects
+      floor_ceiling <- function(x, min_val, max_val) {
+        n <- length(na.omit(x))  # Number of non-NA values
+        floor_prop <- sum(x == min_val, na.rm = TRUE) / n
+        ceiling_prop <- sum(x == max_val, na.rm = TRUE) / n
+        return(c(floor = floor_prop, ceiling = ceiling_prop))
+      }
     
 # Plots
   # Theme
@@ -315,7 +323,7 @@
         dpi = dpi
       )
       
-      message("✅ Plot saved to: ", file.path(folder, paste0(filename, ".png")))
+      message("Plot saved to: ", file.path(folder, paste0(filename, ".png")))
       return(final_plot)
     }
     

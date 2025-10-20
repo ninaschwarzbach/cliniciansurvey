@@ -3,17 +3,12 @@
 # Start date: 01.10.2025
 # Date last updated: 
 
-# Set working directory 
-  setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-
 # Load functions script
   source("functions.R")
 
 # Upload Data
   wave1 <- read.csv("data/raw/wave1_data.csv", stringsAsFactors = FALSE)
   wave2 <- read.csv("data/raw/wave2_data.csv", stringsAsFactors = FALSE)
-
-### Note: Both data sets, merge datasets (or merge after?)
 
 # Data cleaning / exclusion
   ## Changes empty spaces to Na's 
@@ -114,7 +109,10 @@
       duplicated_values <- combined[duplicated(combined)]
       unique_duplicates <- unique(duplicated_values); unique_duplicates
       
-    # Find indices of each duplicated value ### check whether they said they participated before 
+    # Find indices of each duplicated value 
+      # Did they say they participated before?
+        table(wave2$Q11)
+      
       # For "1234567"
         which(wave1$Q23 == "1234567")   
         which(wave2$Q48 == "1234567")  
@@ -259,7 +257,8 @@
             FamiliarityEBMH = Q24_1,              
             UseEBMH1 = Q24_2,              
             UseEBMH1_TEXT = Q25, 
-            UseEBMH2 = Q26,              
+            UseEBMH2 = Q32_1,  
+            UseEvidence_YesNo = Q26,
             ResearchResources = Q27,              
             ResearchResources_TEXT = Q27_5_TEXT, 
             TreatmentManuals = Q28,              
@@ -267,7 +266,6 @@
             EBMHPsychDisorders1 = Q30_1,              
             EBMHPsychDisorders2 = Q30_2,              
             ComparisonEBMHPsychDisordersOtherDisorders = Q31_1,              
-            AdjustingPracticesEBMH = Q32_1, 
             EBMHSkills1 = Q32_2,              
             EBMHSkills2 = Q32_3,              
             PerceptionGap1 = Q32_4,              

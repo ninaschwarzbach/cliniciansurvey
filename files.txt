@@ -1,0 +1,12 @@
+.gitignore
+README.md
+analysis 2025.Rproj
+analysis_main.R
+data_cleaning.R
+functions.R
+plots/boxplot_age.png
+plots/boxplot_grad.png
+plots/boxplot_years_experience.png
+plots/violin_age.png
+plots/violin_combined.png
+plots/violin_experience.png
