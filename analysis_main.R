@@ -50,11 +50,24 @@ source("data_cleaning.R")
   # Categorical vars
     cat_vars <- c("GenderIdentity", "Degree", "Country", "WorkSetting", "LengthTrajectory", "ProfessionalBackground")
     cat_table <- describe_categorical(data, cat_vars,group = "Wave", include_na = FALSE, file_prefix = "Table2_Categorical",out_folder = "outputs", pct_digits = 1); cat_table     
-    
 
 # Descriptive statistics
     
-    ### continue here, use functions for describing continuous variables 
+  ## Transform Likert to numbers 
+    # define vector of Likert item names  ### continue here looking to identify likerts
+      likert_df <- data %>%
+        select(where(~ any(str_detect(tolower(as.character(.x)),
+                                      "agree|disagree|neither agree nor disagree"))))
+      
+    # Check what got selected
+    names(likert_df)
+      likert_items <- c("AttitudeEBMH1", "AttitudeEBMH2", "AttitudeEBMH3",
+                      "AttitudeEBMH4","EBMHSkills1", "EBMHSkills2", "EBMHSkills3")
+   
+    
+    # convert text -> numeric using your likert_to_num function
+    data <- data %>%
+      mutate(across(all_of(likert_items), ~ likert_to_num(.x)))
     
   ## Item-level descriptive stats: mean, SD, skew, kurtosis
   ## Identify floor/ceiling effects or low variance items

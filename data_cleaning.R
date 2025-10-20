@@ -526,7 +526,8 @@
     
   # Delete social workers
     wave2 <- wave2 %>%
-      filter(ProfessionalBackground != "social worker")
+      filter(is.na(ProfessionalBackground) | ProfessionalBackground != "Social worker")
+    
     
 # Remove those with Bachelor's Degree or equivalent and High School Degree or equivalent  
     wave1 <- wave1 %>%
