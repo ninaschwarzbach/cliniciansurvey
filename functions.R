@@ -35,27 +35,6 @@
       return(df)
     }
     
-  # Likert map (customize for your scale)
-    likert_map <- c(
-      "Strongly disagree" = 1,
-      "Disagree" = 2,
-      "Neither Agree nor Disagree" = 3,
-      "Agree" = 4,
-      "Strongly agree" = 5
-    )
-  
-  # Likert Levels 
-    likert_levels <- c(
-      "Strongly disagree",
-      "Disagree",
-      "Neither Agree nor Disagree",
-      "Agree",
-      "Strongly agree"
-    )
-    
-  # Define reversed order
-    likert_reversed <- rev(likert_levels)
-    
   # Function to reverse text-based Likert scales
     reverse_likert_text <- function(x) {
       factor(x, levels = likert_levels, labels = likert_reversed)
@@ -377,9 +356,10 @@
           outlier.shape = NA
         ) +
         scale_fill_brewer(palette = palette, name = "Wave") +
-        labs(title = title, x = NULL, y = as_label(var_sym)) +
+        labs(title = title, x = NULL, 
+             y = as_label(var_sym)) +
         coord_cartesian(clip = "off") +
-        theme_plots() +  # use custom theme
+        theme_plots() + 
         theme(
           legend.position = if (show_legend) "right" else "none",
           legend.title = element_text(size = 13),
@@ -413,8 +393,7 @@
         height = height,
         dpi = dpi
       )
-      
-      message("✅ Violin plot saved to: ", file.path(folder, paste0(filename, ".png")))
+      message("Violin plot saved to: ", file.path(folder, paste0(filename, ".png")))
       return(final_plot)
     }
     

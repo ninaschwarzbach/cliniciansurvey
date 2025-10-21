@@ -3,9 +3,6 @@
 # Start date: 01.10.2025
 # Date last updated: 
 
-# Load functions script
-  source("functions.R")
-
 # Upload Data
   wave1 <- read.csv("data/raw/wave1_data.csv", stringsAsFactors = FALSE)
   wave2 <- read.csv("data/raw/wave2_data.csv", stringsAsFactors = FALSE)
