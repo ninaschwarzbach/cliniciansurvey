@@ -536,8 +536,34 @@
   wave1$Age <- as.numeric(gsub(" ?Jahre", "", trimws(wave1$Age)))
   wave2$Age <- as.numeric(gsub(" ?Jahre", "", trimws(wave2$Age)))
   
-                
-# Outlier detection 
+# Fix length therapy 
+  unique(wave1$LengthTrajectory)
+  unique(wave2$LengthTrajectory)
+  
+  # Keep original variable 
+    wave2$LengthTrajectory_original <- wave2$LengthTrajectory
+    
+  # Recode to match wave1 categories
+    wave2 <- wave2 %>%
+      mutate(
+        LengthTrajectory_recode = case_when(
+          LengthTrajectory == "Prolonged short-term therapy (up to around 25 sessions or up to a year)" ~ 
+            "Short-term therapy (up to 25 sessions or up to a year)",
+          
+          LengthTrajectory == "Short-term therapy ( around 1 to 16 sessions)" ~ 
+            "Short-term therapy (up to 25 sessions or up to a year)",
+          
+          LengthTrajectory == "Long-term therapy (more than 25 sessions or longer than a year)" ~ 
+            "Long-term therapy (more than 25 sessions or longer than a year)",
+          
+          LengthTrajectory == "It varies" ~ 
+            "It varies",
+          
+          TRUE ~ NA_character_   # Keep missing or any unmatched categories as NA
+        )
+      )
+               
+# Outlier detection sample characteristics
   # Combine wave1 and wave2 into one dataset
         combined <- bind_rows(
           wave1 %>% select(Participant_ID, YearsExperience, GraduationYear, Age) %>% mutate(Wave = "Wave 1"),

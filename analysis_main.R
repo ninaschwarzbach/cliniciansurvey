@@ -59,7 +59,8 @@ library(stringr)
     cat_table <- describe_categorical(data, cat_vars,group = "Wave", include_na = FALSE, file_prefix = "Table2_Categorical",out_folder = "outputs", pct_digits = 1); cat_table     
 
   # Remove from environment 
-    rm(cat_vars, cont_vars, violin_age, violin_experience)
+    rm(cat_vars, cont_vars, violin_age, violin_experience, 
+       desc_table, combined_violin, cat_table)
     
 # Descriptive statistics
     
@@ -88,13 +89,6 @@ library(stringr)
         data$research_experience_mean <- rowMeans(data[, c( "ResearchExperience1",  "ResearchExperience2")], na.rm = TRUE)
         data$EBMH_PsychDisorders_mean <- rowMeans(data[, c("EBMHPsychDisorders1", "EBMHPsychDisorders2")], na.rm = TRUE)
         
-        
-        # mean variables
-        mean_vars <- c("EBMH_use_mean", "EBMH_skills_mean", "perception_gap_mean", 
-                       "EBMH_attitude_mean", "workplace_influences_mean", 
-                       "employer_influences_mean", "research_experience_mean", 
-                       "EBMH_PsychDisorders_mean")
-        
     
   ## Item-level descriptive stats: mean, SD, skew, kurtosis
       # Define the items for each scale 
@@ -113,8 +107,86 @@ library(stringr)
           EBMH_PsychDisorders = c("EBMHPsychDisorders1", "EBMHPsychDisorders2")
         )
         
+      # Cronbach's alpha
+        alpha_results <- lapply(names(scale_items), function(scale_name) {
+          items <- scale_items[[scale_name]]
+          items <- intersect(items, names(data))  # only keep existing columns
+          
+          if (length(items) < 2) {
+            return(data.frame(
+              Scale = scale_name,
+              N_Items = length(items),
+              Alpha = NA,
+              Mean_r = NA,
+              Note = "Not enough items"
+            ))
+          }
+          
+          a <- psych::alpha(data[items])
+          
+          data.frame(
+            Scale = scale_name,
+            N_Items = length(items),
+            Alpha = round(a$total$raw_alpha, 3),
+            Mean_r = round(a$total$average_r, 3),
+            Note = ""
+          )
+        }) %>%
+          do.call(rbind, .)
+        
+        # Print and save results
+        cat("\nCronbach’s Alpha Results:\n")
+        print(alpha_results)
+        
+        # Correlation for 2 item scales 
+        cor(data$UseEBMH1, data$UseEBMH2, use = "pairwise.complete.obs")
+        cor(data$PerceptionGap1, data$PerceptionGap2, use = "pairwise.complete.obs")
+        
+        # Scale with low reliability and 2+ items
+        alpha(data[scale_items[["EBMH_attitude"]]])$item.stats
+        
+        # Checking if alpha would be better without item 3 and 4 
+        # Full scale
+        alpha(data[, c("AttitudeEBMH1", "AttitudeEBMH2", "AttitudeEBMH3", "AttitudeEBMH4")])
+        
+        # Without item 4
+        alpha(data[, c("AttitudeEBMH1", "AttitudeEBMH2", "AttitudeEBMH3")])
+        
+        # Without items 3 and 4
+        alpha(data[, c("AttitudeEBMH1", "AttitudeEBMH2")])
+        cor(data$AttitudeEBMH1, data$AttitudeEBMH2, use = "pairwise.complete.obs")
+        
+      # Change items with low internal consistency
+        data$EBMH_use <- data$UseEBMH1 # only one item for use
+        data$EBMH_openness <- data$UseEBMH2 # making this a separate item
+        data$EBMH_attitude_mean <- rowMeans(data[, c("AttitudeEBMH1", "AttitudeEBMH2")],
+                                            na.rm = TRUE) # two items for attitude
+        data$EBMH_importance_clinical_expertise <- data$AttitudeEBMH3 # making this a separate item
+        
+        
+      # remove from enviroment 
+        rm(alpha_results, likert_cols)
+        
+      # Updated scale items 
+        scale_items <- list(
+          EBMH_skills = c("EBMHSkills1", "EBMHSkills2", "EBMHSkills3"),
+          perception_gap = c("PerceptionGap1", "PerceptionGap2"),
+          EBMH_attitude = c("AttitudeEBMH1", "AttitudeEBMH2"), 
+          workplace_influences = c("WorkplaceInfluences1", "WorkplaceInfluences2", 
+                                   "WorkplaceInfluences3", "WorkplaceInfluences4"),
+          employer_influences = c("EmployerInfluences1", "EmployerInfluences2", 
+                                  "EmployerInfluences3", "EmployerInfluences4", 
+                                  "EmployerInfluences5", "EmployerInfluences6", 
+                                  "EmployerInfluences7"),
+          research_experience = c("ResearchExperience1", "ResearchExperience2"),
+          EBMH_PsychDisorders = c("EBMHPsychDisorders1", "EBMHPsychDisorders2")
+        )
+        
       # Combine all items into a single vector
         all_items <- unlist(scale_items)
+        extra_single_items <- c("UseEBMH1", "UseEBMH2", "AttitudeEBMH3")  # Keep item4 out
+        all_items <- unique(c(unlist(scale_items), extra_single_items))
+        
         
       # Define scale range (adjust if not 1–5)
         min_scale <- 1
@@ -136,23 +208,49 @@ library(stringr)
         cat("Item-Level Descriptive Statistics:\n")
         print(item_stats)
         
-        ### Still cronbach's alpha or so??? 
-        
+
       # Remove from environment 
-        rm(likert_cols, scale_items, all_items, item_stats) ### Check more items to remove :) 
+        rm(scale_items, all_items, item_stats, 
+           all_items, extra_single_items, 
+           item_stats) 
         
         
-  ## Identify floor/ceiling effects or low variance items
+   ## Identify floor/ceiling effects or low variance items
+       
+      # Vector of mean variables 
+        desc_vars <- c(
+          "EBMH_use",            
+          "EBMH_openness",          
+          "EBMH_skills_mean",
+          "perception_gap_mean",
+          "EBMH_attitude_mean",         
+          "workplace_influences_mean",
+          "employer_influences_mean",
+          "research_experience_mean",
+          "EBMH_PsychDisorders_mean",
+          "EBMH_importance_clinical_expertise", 
+          "FamiliarityEBMH", 
+          "UpdatedConferences", 
+          "UpdatedWorkplace",
+          "UpdatedSupervision", 
+          "UpdatedPrivate", 
+          "UpdatedOther",
+          "EBMHEndorsementConferences", 
+          "EBMHEndorsementWorkplace",
+          "EBMHEndorsementSupervision", 
+          "EBMHEndorsementPrivate",
+          "EBMHEndorsementOther"
+          )
         
       # Calculate floor/ceiling effects
-        floor_ceiling_results <- t(sapply(data[mean_vars], floor_ceiling, min_val = min_scale, max_val = max_scale))
+        floor_ceiling_results <- t(sapply(data[desc_vars], floor_ceiling, min_val = min_scale, max_val = max_scale))
         cat("Floor and Ceiling Effects (Proportions):\n")
         print(round(floor_ceiling_results, 3))
         
       # Calculate variance and standard deviation for each variable
         variance_stats <- data.frame(
-          Variance = sapply(data[mean_vars], var, na.rm = TRUE),
-          Std_Dev = sapply(data[mean_vars], sd, na.rm = TRUE)
+          Variance = sapply(data[desc_vars], var, na.rm = TRUE),
+          Std_Dev = sapply(data[desc_vars], sd, na.rm = TRUE)
         )
         
         cat("\nVariance and Standard Deviation:\n")
@@ -165,50 +263,45 @@ library(stringr)
         print(low_variance_items)
         
       # Remove from environment 
-        rm(min_scale, max_scale)
-        
+        rm(min_scale, max_scale, low_variance_items, 
+           low_variance_threshold, variance_stats)
+
 # Descriptives Core outcomes 
-  
-  ## Vector with all variables            
-    desc_vars <- c(mean_vars,
-      "FamiliarityEBMH", 
-      "UpdatedConferences", "UpdatedWorkplace",
-      "UpdatedSupervision", "UpdatedPrivate", "UpdatedOther",
-      "EBMHEndorsementConferences", "EBMHEndorsementWorkplace",
-      "EBMHEndorsementSupervision", "EBMHEndorsementPrivate",
-      "EBMHEndorsementOther")
-    
   ## compute descriptives by Wave and total
     desc_table_1 <- describe_continuous_by_group(data, desc_vars, group = "Wave", save = TRUE, file_prefix = "outputs/descriptives_continuous_main"); desc_table_1
     
   ## Plots
-      
+    ### do we really need to plot "other" options??
     # Rename Columns so it works with previous functions 
-        plot_data <- data
-        plot_data <- plot_data %>% 
-          rename(
-            `Use of EBMH (mean)` = EBMH_use_mean,
-            `EBMH Skills (mean)` = EBMH_skills_mean,
-            `Perception Gap (mean)` = perception_gap_mean,
-            `Attitude Toward EBMH (mean)` = EBMH_attitude_mean,
-            `Workplace Influences (mean)` = workplace_influences_mean,
-            `Employer Influences (mean)` = employer_influences_mean,
-            `Research Experience (mean)` = research_experience_mean,
-            `Importance EBMH (mean)` = EBMH_PsychDisorders_mean,
-            `Familiarity with EBMH` = FamiliarityEBMH,
-            `Updated Conferences` = UpdatedConferences,
-            `Updated Workplace` = UpdatedWorkplace,
-            `Updated Supervision` = UpdatedSupervision,
-            `Updated Private Study` = UpdatedPrivate,
-            `Updated Other Methods` = UpdatedOther,
-            `EBMH Endorsement Conferences` = EBMHEndorsementConferences,
-            `EBMH Endorsement Workplace` = EBMHEndorsementWorkplace,
-            `EBMH Endorsement Supervision` = EBMHEndorsementSupervision,
-            `EBMH Endorsement Private Settings` = EBMHEndorsementPrivate,
-            `EBMH Endorsement (Other Contexts)` = EBMHEndorsementOther
-          )
-        
-      
+    plot_data <- data
+    plot_data <- plot_data %>% 
+      rename(
+        `EBMH Use` = EBMH_use,
+        `EBMH Openness` = EBMH_openness,
+        `EBMH Skills (mean)` = EBMH_skills_mean,
+        `Perception Gap (mean)` = perception_gap_mean,
+        `Attitude Toward EBMH (mean)` = EBMH_attitude_mean,
+        `Importance: clinical expertise` = EBMH_importance_clinical_expertise,
+        `Workplace Influences (mean)` = workplace_influences_mean,
+        `Employer Influences (mean)` = employer_influences_mean,
+        `Research Experience (mean)` = research_experience_mean,
+        `Importance EBMH (mean)` = EBMH_PsychDisorders_mean,
+        `Familiarity with EBMH` = FamiliarityEBMH,
+        `Updated Conferences` = UpdatedConferences,
+        `Updated Workplace` = UpdatedWorkplace,
+        `Updated Supervision` = UpdatedSupervision,
+        `Updated Private Study` = UpdatedPrivate,
+        `Updated Other Methods` = UpdatedOther,
+        `EBMH Endorsement Conferences` = EBMHEndorsementConferences,
+        `EBMH Endorsement Workplace` = EBMHEndorsementWorkplace,
+        `EBMH Endorsement Supervision` = EBMHEndorsementSupervision,
+        `EBMH Endorsement Private Settings` = EBMHEndorsementPrivate,
+        `EBMH Endorsement (Other Contexts)` = EBMHEndorsementOther
+      )
+     
+    ### maybe histogram for single items? 
+    ### Also think about if you want to plot those for only wave 2 differently 
+    
     # Loop through all variables plots OLD
         for (var_old in names(label_map)) {
           info <- label_map[[var_old]]
@@ -222,7 +315,8 @@ library(stringr)
         }
         
         
-    # Combined plots 
+    # Combined plots ### update combined plots, think about which ones are actually important
+      ### error violon use of ebmh mean not found --> check error here
         combined_violin_dependentvars <- grid.arrange(`violin_Use_of_EBMH_(mean)`, `violin_Attitude_Toward_EBMH_(mean)`, ncol = 2)
         ggsave(
           "plots/combined_violin_dependentvars.png",
@@ -267,13 +361,11 @@ library(stringr)
           height = 15,   
           dpi = 300
         ); combined_violin_updated
-        
-  ## EBMH use (composite)
-  ## EBMH attitudes (composite)
-  ## Violin/raincloud plots by wave and country
-        
-        # remove here desc_vars, desc_table1, plot_data and all plots
-        ### continue here: examine all plots if they look good and 
+      
+  ### Still by country for supplements??
+  ### look at warnings
+  ### check what you can remove from environment
+  ### in environment to be deleted desc_table_1, plot_data
 
 # Correlational analyses
   ## Correlations with EBMH use
@@ -293,3 +385,4 @@ library(stringr)
 # Remove local environment 
   detach(.func_env)
   rm(.func_env)
+  

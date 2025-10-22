@@ -26,76 +26,86 @@
     "Strongly agree" = 5
   )
 
-# Label map
+  # Label map (UPDATED for split Use -> actual vs openness; attitude uses items 1&2; item3 = importance)
   label_map <- list(
-    "EBMH_use_mean" = list(
-      title = "Use of EBMH",
-      y = "Use of EBMH (mean)",          
-      filename = "violin_EBMH_use_mean.png"
+    "EBMH_use_actual" = list(
+      title = "EBMH Use",
+      y = "EBMH Use",
+      filename = "violin_EBMH_use_actual.png"
+    ),
+    "EBMH_openness" = list(
+      title = "EBMH Openness",
+      y = "EBMH Openness",
+      filename = "violin_EBMH_use_openness.png"
     ),
     "EBMH_skills_mean" = list(
       title = "Skills EBMH",
-      y = "EBMH Skills (mean)",          
+      y = "EBMH Skills (mean)",
       filename = "violin_EBMH_skills_mean.png"
     ),
     "perception_gap_mean" = list(
       title = "Perception Gap Between Science and Practice",
-      y = "Perception Gap (mean)",       
+      y = "Perception Gap (mean)",
       filename = "violin_perception_gap_mean.png"
     ),
     "EBMH_attitude_mean" = list(
-      title = "Attitudes Toward EBMH Practices",
-      y = "Attitude Toward EBMH (mean)", 
+      title = "Attitudes Toward EBMH Practices (items 1 & 2)",
+      y = "Attitude Toward EBMH (mean)",
       filename = "violin_EBMH_attitude_mean.png"
+    ),
+    "EBMH_importance_clinical_expertise" = list(
+      title = "Importance: clinical expertise",
+      y = "Importance: clinical expertise",
+      filename = "violin_EBMH_importance_clinical_expertise.png"
     ),
     "workplace_influences_mean" = list(
       title = "Workplace Influences EBMH Implementation",
-      y = "Workplace Influences (mean)", 
+      y = "Workplace Influences (mean)",
       filename = "violin_workplace_influences_mean.png"
     ),
     "employer_influences_mean" = list(
       title = "Employer Influences EBMH Implementation",
-      y = "Employer Influences (mean)",  
+      y = "Employer Influences (mean)",
       filename = "violin_employer_influences_mean.png"
     ),
     "research_experience_mean" = list(
       title = "Research Experience",
-      y = "Research Experience (mean)",  
+      y = "Research Experience (mean)",
       filename = "violin_research_experience_mean.png"
     ),
     "EBMH_PsychDisorders_mean" = list(
       title = "Importance EBMH for Psychotic Dis.",
-      y = "Importance EBMH (mean)",      
+      y = "Importance EBMH (mean)",
       filename = "violin_EBMH_PsychDisorders_mean.png"
     ),
     "FamiliarityEBMH" = list(
       title = "Familiarity EBMH Concept",
-      y = "Familiarity with EBMH",       
+      y = "Familiarity with EBMH",
       filename = "violin_FamiliarityEBMH.png"
     ),
     "UpdatedConferences" = list(
       title = "Updated Through Conferences",
-      y = "Updated Conferences",         
+      y = "Updated Conferences",
       filename = "violin_UpdatedConferences.png"
     ),
     "UpdatedWorkplace" = list(
       title = "Updated Through Workplace",
-      y = "Updated Workplace",           
+      y = "Updated Workplace",
       filename = "violin_UpdatedWorkplace.png"
     ),
     "UpdatedSupervision" = list(
       title = "Updated Through Supervision",
-      y = "Updated Supervision",         
+      y = "Updated Supervision",
       filename = "violin_UpdatedSupervision.png"
     ),
     "UpdatedPrivate" = list(
       title = "Updated Through Private Study",
-      y = "Updated Private Study",       
+      y = "Updated Private Study",
       filename = "violin_UpdatedPrivate.png"
     ),
     "UpdatedOther" = list(
       title = "Updated Through Other Means",
-      y = "Updated Other Methods",       
+      y = "Updated Other Methods",
       filename = "violin_UpdatedOther.png"
     ),
     "EBMHEndorsementConferences" = list(
@@ -105,7 +115,7 @@
     ),
     "EBMHEndorsementWorkplace" = list(
       title = "Endorsement of EBMH Workplace",
-      y = "EBMH Endorsement Workplace",  
+      y = "EBMH Endorsement Workplace",
       filename = "violin_EBMHEndorsementWorkplace.png"
     ),
     "EBMHEndorsementSupervision" = list(
