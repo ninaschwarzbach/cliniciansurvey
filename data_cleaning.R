@@ -523,6 +523,8 @@
     wave2 <- wave2 %>%
       filter(is.na(ProfessionalBackground) | ProfessionalBackground != "Social worker")
     
+  # Impute Psychologist as ProfessionalBackground for wave 1 as we only sampled psychologists 
+    wave1$ProfessionalBackground <- "Psychologist"
     
 # Remove those with Bachelor's Degree or equivalent and High School Degree or equivalent  
     wave1 <- wave1 %>%

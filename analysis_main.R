@@ -217,7 +217,7 @@ library(stringr)
         
    ## Identify floor/ceiling effects or low variance items
        
-      # Vector of mean variables 
+      # Vector of mean variables ### university education missing
         desc_vars <- c(
           "EBMH_use",            
           "EBMH_openness",          
@@ -272,7 +272,7 @@ library(stringr)
     
   ## Plots
     ### do we really need to plot "other" options??
-    # Rename Columns so it works with previous functions 
+    # Rename Columns so it works with previous functions ### university education missing
     plot_data <- data
     plot_data <- plot_data %>% 
       rename(
@@ -301,6 +301,8 @@ library(stringr)
      
     ### maybe histogram for single items? 
     ### Also think about if you want to plot those for only wave 2 differently 
+    ### Stagged barplots for the single item variables 
+    ### Change plots again completely.... 
     
     # Loop through all variables plots OLD
         for (var_old in names(label_map)) {
@@ -316,8 +318,7 @@ library(stringr)
         
         
     # Combined plots ### update combined plots, think about which ones are actually important
-      ### error violon use of ebmh mean not found --> check error here
-        combined_violin_dependentvars <- grid.arrange(`violin_Use_of_EBMH_(mean)`, `violin_Attitude_Toward_EBMH_(mean)`, ncol = 2)
+        combined_violin_dependentvars <- grid.arrange(`violin_EBMH_Use`, `violin_Attitude_Toward_EBMH_(mean)`, ncol = 2)
         ggsave(
           "plots/combined_violin_dependentvars.png",
           combined_violin_dependentvars,
@@ -368,11 +369,68 @@ library(stringr)
   ### in environment to be deleted desc_table_1, plot_data
 
 # Correlational analyses
+  # Define and check predictors 
+        ### Are these all variables?? Check analysis plan
+        ### Where is university education?? also check analysis above
+        
+      # Dependent variables
+        DVs <- c("EBMH_use", "EBMH_attitude_mean", "EBMH_openness")  # Fixed 'EBMH Openness' to 'EBMH_openness'
+        
+      # Continuous/interval-like predictors
+        continuous_preds <- c("EBMH_skills_mean", "perception_gap_mean", "workplace_influences_mean",
+                              "employer_influences_mean", "research_experience_mean",
+                              "EBMH_PsychDisorders_mean",
+                              "Age", "YearsExperience", grep("^SchoolSlider", names(data), value = TRUE))
+        
+      # Ordinal predictors
+        ordinal_preds <- c("FamiliarityEBMH", "UpdatedConferences", "UpdatedWorkplace", "UpdatedSupervision",
+                           "UpdatedPrivate", "UpdatedOther")
+        
+      # Binary predictors
+        binary_preds <- c("Country", "Wave")
+        
+      # Nominal predictors
+        nominal_preds <- c("GenderIdentity", "Degree", "WorkSetting", "LengthTrajectory", "ProfessionalBackground")  
+        
+      # Combine all variables
+        all_vars <- c(DVs, continuous_preds, ordinal_preds, binary_preds, nominal_preds)
+        
+      # Check classes of the variables in the dataset
+        class_info <- sapply(data[all_vars], class)
+        
+      # Print the results
+        print(class_info)
+        
+      # Fix issues 
+        for (var in ordinal_preds) {
+          data[[var]] <- as.ordered(data[[var]])  # Use as.ordered for ordinal data
+        }
+        
+        for (var in binary_preds) {
+          data[[var]] <- as.factor(data[[var]])
+        }
+          
+        for (var in nominal_preds) {
+          data[[var]] <- as.factor(data[[var]])
+        }
+        
+        
+      # Which ones are wave 1 or wave 2 specific 
+        wave2_preds <- c("EBMH_PsychDisorders_mean", "SchoolSliderPsychodynamic_PsychDisorders", 
+                         "SchoolSliderHumanistic", "SchoolSliderMBT", "UpdatedConferences", 
+                         "UpdatedWorkplace", "UpdatedSupervision", "UpdatedPrivate", 
+                         "UseEvidence_YesNo", "ProfessionalBackground")
+        wave1_preds <- c("SchoolSliderAnalytical") ### why is this wave 1 specific??? 
+        
   ## Correlations with EBMH use
   ## Correlations with EBMH attitudes
   ## Correlations among  other variables
 
+  # Wave 2 correlational analysis (not other specific analysis)
+
 # Wave 2 specific analyses
+        ### Also add here evidence yes/no, as it was wave specific, also  "EBMH_PsychDisorders_mean",
+        ### check missing variables
   ## Importance of EBMH in psychotic disorder treatment
   ## Professional interactions & evidence exchange
   ## Use of treatment manuals

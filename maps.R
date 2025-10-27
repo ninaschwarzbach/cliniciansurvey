@@ -28,10 +28,10 @@
 
   # Label map (UPDATED for split Use -> actual vs openness; attitude uses items 1&2; item3 = importance)
   label_map <- list(
-    "EBMH_use_actual" = list(
+    "EBMH_use" = list(
       title = "EBMH Use",
       y = "EBMH Use",
-      filename = "violin_EBMH_use_actual.png"
+      filename = "violin_EBMH_use.png"
     ),
     "EBMH_openness" = list(
       title = "EBMH Openness",
