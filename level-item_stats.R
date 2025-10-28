@@ -2,7 +2,7 @@
 # Clinician Survey Project - Level-Item Statistics -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 
+# Date last updated: 28.10.2025
 # ===========================================================================
 
 
@@ -167,3 +167,8 @@ low_variance_items <- variance_stats[variance_stats$Std_Dev < low_variance_thres
 cat("\nLow Variance Items (SD < 1):\n")
 print(low_variance_items)
 
+
+
+# Clean environment ---------------------------------------------------------------
+rm(alpha_results, floor_ceiling_results, item_stats, low_variance_items, scale_items, variance_stats, 
+   all_items, extra_single_items, low_variance_threshold, max_scale, min_scale)

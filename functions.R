@@ -2,7 +2,7 @@
 # Clinician Survey Project - Functions
 # Author: Nina Schwarzbach
 # Start date: 01.10.2025
-# Date last updated: 
+# Date last updated: 28.10.2025
 # ===========================================================================
 
 # Data Cleaning
@@ -399,4 +399,112 @@
       message("Violin plot saved to: ", file.path(folder, paste0(filename, ".png")))
       return(final_plot)
     }
+    
+    
+# Correlation functions 
+    # Cramer's V 
+    cramers_v <- function(x, y) {
+      tab <- table(x, y)
+      if (any(dim(tab) == 0)) return(NA)
+      chi <- suppressWarnings(chisq.test(tab, correct = FALSE)$statistic)
+      n <- sum(tab)
+      k <- min(nrow(tab), ncol(tab))
+      if (n == 0 || k == 1) return(NA)
+      as.numeric(sqrt(chi / (n * (k - 1))))
+    }
+    
+    # Eta-squared (for nominal predictor vs continuous DV)
+    eta_squared <- function(dv, group) {
+      # require at least two groups
+      if (length(unique(group[!is.na(group)])) < 2) return(NA)
+      df <- data.frame(dv = dv, group = as.factor(group))
+      df <- df[complete.cases(df), ]
+      if (nrow(df) < 3) return(NA)
+      a <- aov(dv ~ group, data = df)
+      ss <- summary(a)[[1]][, "Sum Sq"]
+      # ss[1] = between, ss[2] = within
+      eta2 <- ss[1] / sum(ss)
+      pval <- summary(a)[[1]][, "Pr(>F)"][1]
+      list(eta2 = as.numeric(eta2), p = as.numeric(pval), n = nrow(df))
+    }
+    
+    # decide Pearson vs Spearman for two numeric-ish vectors
+    choose_corr <- function(x, y) {
+      # x and y are numeric vectors (with NAs)
+      ok <- complete.cases(x, y)
+      n <- sum(ok)
+      if (n < 3) return(list(method = NA, cor = NA, p = NA, n = n))
+      x2 <- x[ok]; y2 <- y[ok]
+      # if both roughly normal -> Pearson, else Spearman
+      use_pearson <- FALSE
+      # Only run shapiro when n between 3 and 5000 (shapiro limitation)
+      shapiro_ok <- (n >= 3 & n <= 5000)
+      if (shapiro_ok) {
+        sx <- tryCatch(shapiro.test(x2)$p.value, error = function(e) NA)
+        sy <- tryCatch(shapiro.test(y2)$p.value, error = function(e) NA)
+        if (!is.na(sx) && !is.na(sy) && sx > 0.05 && sy > 0.05) use_pearson <- TRUE
+      }
+      method <- if (use_pearson) "pearson" else "spearman"
+      ct <- tryCatch(cor.test(x2, y2, method = method), error = function(e) NULL)
+      if (is.null(ct)) return(list(method = method, cor = NA, p = NA, n = n))
+      list(method = method, cor = as.numeric(ct$estimate), p = as.numeric(ct$p.value), n = n)
+    }
+    
+    # point-biserial: correlate continuous with binary (factor with 2 levels)
+    point_biserial <- function(cont, bin) {
+      # convert bin to numeric 0/1
+      ok <- complete.cases(cont, bin)
+      n <- sum(ok)
+      if (n < 3) return(list(r = NA, p = NA, n = n))
+      binf <- as.factor(bin[ok])
+      if (nlevels(binf) != 2) return(list(r = NA, p = NA, n = n))
+      bin_num <- as.numeric(binf) - 1 # 0/1
+      ct <- tryCatch(cor.test(cont[ok], bin_num, method = "pearson"), error = function(e) NULL)
+      if (is.null(ct)) return(list(r = NA, p = NA, n = n))
+      list(r = as.numeric(ct$estimate), p = as.numeric(ct$p.value), n = n)
+    }
+    
+    
+    
+    #  functions to check variable levels
+    is_continuous_var <- function(xname) {
+      xname %in% continuous_preds && xname %in% names(data)
+    }
+    
+    is_ordinal_var <- function(xname) {
+      xname %in% ordinal_preds && xname %in% names(data)
+    }
+    
+    is_binary_var <- function(xname) {
+      xname %in% binary_preds && xname %in% names(data)
+    }
+    
+    is_nominal_var <- function(xname) {
+      xname %in% nominal_preds && xname %in% names(data)
+    }
+    
+    # Effect size estimation 
+    categorize_effect <- function(stat, method) {
+      if (is.na(stat)) return(NA)
+      abs_stat <- abs(stat)
+      
+      # use different cutoffs by method type
+      if (grepl("eta", method, ignore.case = TRUE)) {
+        if (abs_stat < 0.01) return("very small")
+        else if (abs_stat < 0.06) return("small")
+        else if (abs_stat < 0.14) return("medium")
+        else return("large")
+      } else if (grepl("cramer", method, ignore.case = TRUE)) {
+        if (abs_stat < 0.1) return("very small")
+        else if (abs_stat < 0.3) return("small")
+        else if (abs_stat < 0.5) return("medium")
+        else return("large")
+      } else { # for correlations (r, rho, point-biserial)
+        if (abs_stat < 0.1) return("very small")
+        else if (abs_stat < 0.3) return("small")
+        else if (abs_stat < 0.5) return("medium")
+        else return("large")
+      }
+    }
+    
     

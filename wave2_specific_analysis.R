@@ -2,7 +2,7 @@
 # Clinician Survey Project - Wave 2 specific analysis -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 
+# Date last updated: 28.10.2025
 # ===========================================================================
 
 
@@ -13,3 +13,12 @@
 ## Professional interactions & evidence exchange
 ## Use of treatment manuals
 ## Descriptive percentages, stacked bar plots
+
+
+# freq manuals, and whether they use manuals, the occasions of contact and of those occations, when did they discuss evidence
+# what research resources they are using 
+# Whether the understanding of EBMH is similar
+# whether they are self-employed
+
+# Clean environment ---------------------------------------------------------------
+

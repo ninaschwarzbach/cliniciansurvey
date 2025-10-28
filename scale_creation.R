@@ -3,7 +3,7 @@
 # Clinician Survey Project - Scale Creation -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 
+# Date last updated: 28.10.2025
 # ===========================================================================
 
 ## Transform Likert to numbers 
@@ -30,3 +30,6 @@ data$employer_influences_mean <- rowMeans(data[, c("EmployerInfluences1", "Emplo
                                                    "EmployerInfluences7")], na.rm = TRUE)
 data$research_experience_mean <- rowMeans(data[, c( "ResearchExperience1",  "ResearchExperience2")], na.rm = TRUE)
 data$EBMH_PsychDisorders_mean <- rowMeans(data[, c("EBMHPsychDisorders1", "EBMHPsychDisorders2")], na.rm = TRUE)
+
+# Clean environment ---------------------------------------------------------------
+rm(likert_cols)

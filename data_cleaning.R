@@ -2,7 +2,7 @@
 # Clinician Survey Project - Data Cleaning Script
 # Author: Nina Schwarzbach
 # Start date: 01.10.2025
-# Date last updated: 
+# Date last updated: 28.10.2025
 # ===========================================================================
 
 # Upload Data
@@ -239,7 +239,7 @@
             ParticipationPreviousStudy = Q11, 
             SchoolSliderCBT = Q16_1, 
             SchoolSliderPsychodynamic = Q16_2,              
-            SchoolSliderPsychodynamic_PsychDisorders = Q16_3,              
+            SchoolSliderPsychodynamic_Depth_Analytical = Q16_3,              
             SchoolSliderSystemic = Q16_4, 
             SchoolSliderNeuropsychology = Q16_5,              
             SchoolSliderPersonCentered = Q16_6,              
@@ -380,7 +380,10 @@
   wave2$AttitudeEBMH3 <- reverse_likert_text(wave2$AttitudeEBMH3)
   wave2$PerceptionGap2 <- reverse_likert_text(wave2$PerceptionGap2)
 
-            
+# Sliders 
+  # Delete double item 
+    wave2 <- wave2 %>% select(-`SchoolSliderPsychodynamic_Depth_Analytical`)
+  
 # Filling in Slider Values for NA's
   # Define slider columns 
     sliders_w1 <- c(
@@ -390,7 +393,7 @@
     )
     
     sliders_w2 <- c(
-      "SchoolSliderCBT","SchoolSliderPsychodynamic","SchoolSliderPsychodynamic_PsychDisorders",
+      "SchoolSliderCBT","SchoolSliderPsychodynamic",
       "SchoolSliderSystemic","SchoolSliderNeuropsychology","SchoolSliderPersonCentered",
       "SchoolSliderACT","SchoolSliderHumanistic","SchoolSliderMBT","SchoolSliderOther"
     )
@@ -550,7 +553,7 @@
   # Recode to match wave1 categories
     wave2 <- wave2 %>%
       mutate(
-        LengthTrajectory_recode = case_when(
+        LengthTrajectory = case_when(
           LengthTrajectory == "Prolonged short-term therapy (up to around 25 sessions or up to a year)" ~ 
             "Short-term therapy (up to 25 sessions or up to a year)",
           
@@ -680,7 +683,60 @@
       wave2 %>% mutate(Wave = "Wave 2")
     )
     
+  # Identify from which wave data is 
+    
+    # --- Identify which variables have data in both waves, only one, or none ----
+    
+    if ("Wave" %in% names(data)) {
+      
+      # standardize wave labels
+      waves <- sort(unique(na.omit(data$Wave)))
+      
+      # all variables except Wave
+      vars_to_check <- setdiff(names(data), "Wave")
+      
+      # compute availability
+      wave_presence <- sapply(vars_to_check, function(var) {
+        present_by_wave <- sapply(waves, function(w) {
+          any(!is.na(data[[var]][data$Wave == w]))
+        })
+        n_present <- sum(present_by_wave)
+        
+        if (all(present_by_wave)) {
+          "Both waves"
+        } else if (present_by_wave[1] && !present_by_wave[2]) {
+          paste0(waves[1], " only")
+        } else if (!present_by_wave[1] && present_by_wave[2]) {
+          paste0(waves[2], " only")
+        } else if (!any(present_by_wave)) {
+          "No valid data"
+        } else {
+          paste(names(present_by_wave)[present_by_wave], collapse = ", ")
+        }
+      }, USE.NAMES = TRUE)
+      
+      wave_info <- data.frame(
+        Variable = names(wave_presence),
+        Wave = unname(wave_presence),
+        stringsAsFactors = FALSE,
+        row.names = NULL
+      )
+      
+      # show quick summary
+      print(table(wave_info$Wave, useNA = "ifany"))
+      
+      # Remove from environment 
+      rm(vars_to_check, wave_presence, waves)
+      
+    } else {
+      stop("No column named 'Wave' found in data.")
+    }
+    
+
+    
+    
   # Delete participant ID 
     data <- data %>% select(-c(Participant_ID, ParticipationPreviousStudy)) ### In the end, think if you need to remove more if you want to make data public 
+    
     
     

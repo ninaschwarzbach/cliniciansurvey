@@ -2,7 +2,7 @@
 # Clinician Survey Project - Descriptives -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 
+# Date last updated: 28.10.2025
 # ===========================================================================
 
 
@@ -108,3 +108,9 @@ ggsave(
 ### look at warnings
 ### check what you can remove from environment
 ### in environment to be deleted desc_table_1, plot_data
+
+# Clean environment ---------------------------------------------------------------
+rm(list = c("desc_vars", "info", "plot_data", "desc_table_1", "obj_name", "v", "var_old",
+            ls(pattern = "^violin_"), 
+            ls(pattern = "^combined_violin_")))
+
