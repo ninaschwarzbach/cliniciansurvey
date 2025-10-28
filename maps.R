@@ -1,9 +1,9 @@
-
+# ===========================================================================
 # Clinician Survey Project - Maps
 # Author: Nina Schwarzbach
 # Start date: 21.10.2025
 # Date last updated: 
-
+# ===========================================================================
 
 # Likert Levels 
   likert_levels <- c(
@@ -26,7 +26,7 @@
     "Strongly agree" = 5
   )
 
-  # Label map (UPDATED for split Use -> actual vs openness; attitude uses items 1&2; item3 = importance)
+  # Label map (UPDATED for split Use -> violin_EBMH_use vs openness; attitude uses items 1&2; item3 = importance)
   label_map <- list(
     "EBMH_use" = list(
       title = "EBMH Use",
@@ -49,7 +49,7 @@
       filename = "violin_perception_gap_mean.png"
     ),
     "EBMH_attitude_mean" = list(
-      title = "Attitudes Toward EBMH Practices (items 1 & 2)",
+      title = "Attitudes Toward EBMH",
       y = "Attitude Toward EBMH (mean)",
       filename = "violin_EBMH_attitude_mean.png"
     ),

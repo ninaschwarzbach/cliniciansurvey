@@ -1,7 +1,9 @@
+# ===========================================================================
 # Clinician Survey Project - Data Cleaning Script
 # Author: Nina Schwarzbach
 # Start date: 01.10.2025
 # Date last updated: 
+# ===========================================================================
 
 # Upload Data
   wave1 <- read.csv("data/raw/wave1_data.csv", stringsAsFactors = FALSE)

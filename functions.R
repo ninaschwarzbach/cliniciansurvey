@@ -1,7 +1,9 @@
+# ===========================================================================
 # Clinician Survey Project - Functions
 # Author: Nina Schwarzbach
 # Start date: 01.10.2025
 # Date last updated: 
+# ===========================================================================
 
 # Data Cleaning
     
@@ -368,8 +370,9 @@
       
       return(p)
     }
+
     
-   # Save violin plots
+    # Save violin plots
     save_violin <- function(plot,
                             filename,
                             folder = "plots",
