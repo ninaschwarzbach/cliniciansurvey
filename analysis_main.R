@@ -76,11 +76,11 @@ attach(.func_env, pos = 2)
 
 # Clean previously saved tables and plots
   if (dir.exists("plots")) {
-    unlink(file.path("plots", "*"), recursive = FALSE)  # Deletes all files inside
+    unlink(file.path("plots", "*"), recursive = FALSE)  
     message("All old plots removed from ", "plots")
   }
   if (dir.exists("outputs")) {
-    unlink(file.path("outputs", "*"), recursive = FALSE)  # Deletes all files inside
+    unlink(file.path("outputs", "*"), recursive = FALSE)  
     message("All old tables removed from ", "outputs")
   }
 
