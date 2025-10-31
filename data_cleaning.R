@@ -2,7 +2,7 @@
 # Clinician Survey Project - Data Cleaning Script
 # Author: Nina Schwarzbach
 # Start date: 01.10.2025
-# Date last updated: 28.10.2025
+# Date last updated: 31.10.2025
 # ===========================================================================
 
 # Upload Data
@@ -731,9 +731,6 @@
     } else {
       stop("No column named 'Wave' found in data.")
     }
-    
-
-    
     
   # Delete participant ID 
     data <- data %>% select(-c(Participant_ID, ParticipationPreviousStudy)) ### In the end, think if you need to remove more if you want to make data public 

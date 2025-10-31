@@ -3,7 +3,7 @@
 # Clinician Survey Project - Analysis Script Main -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 28.10.2025
+# Date last updated: 31.10.2025
 # ===========================================================================
 
 ### 0. To do list ---------------------------------------------------------------
@@ -14,7 +14,8 @@
 
 
 # Open: 
-# - draft wave 2 analysis 
+
+# - correlation table needs to be sorted by DV 
 # - extract open-ended questions
 # - fix descriptive graphs - maybe extra script for plots?? 
 # - check ###
@@ -41,6 +42,7 @@
 # - remove stuff from environment after each script 
 # - draft correlations
 # - draft correlations visuals
+# - draft wave 2 analysis 
   
 
 ### 1. Setup ---------------------------------------------------------------
@@ -107,7 +109,6 @@ source("correlational_analysis.R")
 
 ### 7. Wave2-specific analysis ---------------------------------------------------------------
 source("wave2_specific_analysis.R")
-
 
 ### 8. Open-ended responses ---------------------------------------------------------------
  source("open-ended_responses.R")

@@ -43,7 +43,7 @@ plot_data <- plot_data %>%
 ### maybe histogram for single items? 
 ### Also think about if you want to plot those for only wave 2 differently 
 ### Stagged barplots for the single item variables 
-### Change plots again completely.... 
+### Change plots again  
 
 # Loop through all variables plots OLD
 for (var_old in names(label_map)) {

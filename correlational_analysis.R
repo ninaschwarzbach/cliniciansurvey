@@ -2,7 +2,7 @@
 # Clinician Survey Project - Correlational Analysis -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 28.10.2025
+# Date last updated: 31.10.2025
 # ===========================================================================
 
 ### 5. Descriptives 
@@ -205,7 +205,7 @@ ggsave(
   "plots/cor_plot.png",
   cor_plot,
   width = 20,  
-  height = 20,   
+  height = 5,   
   dpi = 300
 )
 
