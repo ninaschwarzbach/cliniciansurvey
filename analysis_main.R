@@ -3,7 +3,7 @@
 # Clinician Survey Project - Analysis Script Main -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 31.10.2025
+# Date last updated: 03.11.2025
 # ===========================================================================
 
 ### 0. To do list ---------------------------------------------------------------
@@ -15,7 +15,7 @@
 
 # Open: 
 
-# - correlation table needs to be sorted by DV 
+# - fix NA in core table
 # - extract open-ended questions
 # - fix descriptive graphs - maybe extra script for plots?? 
 # - check ###
@@ -43,6 +43,7 @@
 # - draft correlations
 # - draft correlations visuals
 # - draft wave 2 analysis 
+# - correlation table needs to be sorted by DV 
   
 
 ### 1. Setup ---------------------------------------------------------------

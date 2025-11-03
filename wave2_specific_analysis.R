@@ -2,7 +2,7 @@
 # Clinician Survey Project - Wave 2 specific analysis -
 # Author: Nina Schwarzbach
 # Start date: 31.09.2025
-# Date last updated: 28.10.2025
+# Date last updated: 03.11.2025
 # ===========================================================================
 
 
@@ -224,7 +224,7 @@ pal_colors <- c(
 )
 
 # Plot
-gg <- ggplot(stack_df, aes(x = Occasion, y = Count, fill = Endorsement)) +
+gg2 <- ggplot(stack_df, aes(x = Occasion, y = Count, fill = Endorsement)) +
   geom_col(color = "white") +
   geom_text(aes(label = ifelse(Percent >= 4, sprintf("%.0f%%", Percent), "")),
             position = position_stack(vjust = 0.5),
@@ -244,16 +244,16 @@ totals <- totals_contact %>%
   mutate(ypos = TotalOcc + max(TotalOcc, na.rm = TRUE) * 0.03,
          lab = paste0("n=", TotalOcc))
 
-gg <- gg +
+gg2 <- gg2 +
   geom_text(data = totals, aes(x = Occasion, y = ypos, label = lab),
             inherit.aes = FALSE, hjust = 0, size = 3) +
   expand_limits(y = max(totals$ypos) * 1.05)
 
-print(gg)
+print(gg2)
 
 ggsave(
   "plots/endorsed.png",
-  gg,
+  gg2,
   width = 14,  
   height = 3.5,   
   dpi = 300
@@ -278,7 +278,7 @@ desc_manuals <- describe(data_wave2_only$TreatmentManuals_Freq); desc_manuals
 # Clean environment ---------------------------------------------------------------
 rm(
   list = c(
-    "data_wave2", "data_wave2_only", "gg", 
+    "data_wave2", "data_wave2_only", "gg", "gg2", 
     "noresp_df",  "stack_df", "totals", "desc_manuals", 
     "endorse_long", "plot_df", "totals_contact", "updated_long", 
      "likert_levels", 

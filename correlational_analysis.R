@@ -2,7 +2,7 @@
 # Clinician Survey Project - Correlational Analysis -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 31.10.2025
+# Date last updated: 03.11.2025
 # ===========================================================================
 
 ### 5. Descriptives 
@@ -169,7 +169,7 @@ results_df <- merge(
 )
 
 # sort columns
-results_df <- results_df[c("DV", setdiff(names(results_df), "DV"))]
+results_df <- results_df[order(results_df$DV, results_df$Predictor), ]
 
 # Add effect size estimation
 
@@ -183,6 +183,15 @@ results_df$EffectSize <- mapply(
 # Save table 
 write.csv(results_df, "outputs/cor_table.csv", row.names = FALSE)
 
+
+# Reorder columns so Predictor comes first
+results_df_reversed <- results_df[c("Predictor", "DV", setdiff(names(results_df), c("Predictor", "DV")))]
+
+# Sort by Predictor, then DV
+results_df_reversed <- results_df_reversed[order(results_df_reversed$Predictor, results_df_reversed$DV), ]
+
+# Save as a new CSV
+write.csv(results_df_reversed, "outputs/cor_table_by_predictor.csv", row.names = FALSE)
 
 ## 5.4 Plot   ---------------------------------------------------------------
 corr_vis <- results_df %>%
