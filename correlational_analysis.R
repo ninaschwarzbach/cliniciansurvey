@@ -2,8 +2,9 @@
 # Clinician Survey Project - Correlational Analysis -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 03.11.2025
+# Date last updated: 04.11.2025
 # ===========================================================================
+
 
 ### 5. Descriptives 
 
@@ -171,6 +172,11 @@ results_df <- merge(
 # sort columns
 results_df <- results_df[order(results_df$DV, results_df$Predictor), ]
 
+
+# Then round
+results_df$Statistic <- format(round(results_df$Statistic, 2), nsmall = 2)
+results_df$P.value   <- format(round(results_df$P.value, 3), nsmall = 3)
+
 # Add effect size estimation
 
 # add column 
@@ -181,7 +187,7 @@ results_df$EffectSize <- mapply(
 )
 
 # Save table 
-write.csv(results_df, "outputs/cor_table.csv", row.names = FALSE)
+write.csv(results_df, "outputs/cor_table.csv", row.names = FALSE, quote = TRUE)
 
 
 # Reorder columns so Predictor comes first
@@ -191,7 +197,7 @@ results_df_reversed <- results_df[c("Predictor", "DV", setdiff(names(results_df)
 results_df_reversed <- results_df_reversed[order(results_df_reversed$Predictor, results_df_reversed$DV), ]
 
 # Save as a new CSV
-write.csv(results_df_reversed, "outputs/cor_table_by_predictor.csv", row.names = FALSE)
+write.csv(results_df_reversed, "outputs/cor_table_by_predictor.csv", row.names = FALSE, quote = TRUE)
 
 ## 5.4 Plot   ---------------------------------------------------------------
 corr_vis <- results_df %>%
@@ -218,8 +224,12 @@ ggsave(
   dpi = 300
 )
 
+
+# Exploring different correlations in more detail 
+describe.by(data$EBMH_attitude_mean, group = data$Country)
+
 # Clean environment ---------------------------------------------------------------
 rm(corr_vis, cor_plot, eta, res, results, results_df, 
    wave_info1, all_vars, binary_preds, continuous_preds, dv, 
    DVs, method, nobs, nominal_preds, ordinal_preds, 
-   pred, pval, rowi, stat, var, x, y)
+   pred, pval, rowi, stat, var, x, y, results_df_reversed)

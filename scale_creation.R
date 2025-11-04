@@ -3,7 +3,7 @@
 # Clinician Survey Project - Scale Creation -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 28.10.2025
+# Date last updated: 04.11.2025
 # ===========================================================================
 
 ## Transform Likert to numbers 
@@ -31,5 +31,29 @@ data$employer_influences_mean <- rowMeans(data[, c("EmployerInfluences1", "Emplo
 data$research_experience_mean <- rowMeans(data[, c( "ResearchExperience1",  "ResearchExperience2")], na.rm = TRUE)
 data$EBMH_PsychDisorders_mean <- rowMeans(data[, c("EBMHPsychDisorders1", "EBMHPsychDisorders2")], na.rm = TRUE)
 
+# Add this to wave_info df
+new_wave_info <- data.frame(
+  Variable = c(
+    "EBMH_openness",
+    "EBMH_skills_mean",
+    "EBMH_use",
+    "employer_influences_mean",
+    "perception_gap_mean",
+    "research_experience_mean",
+    "workplace_influences_mean",
+    "EBMH_attitude_mean",
+    "EBMH_PsychDisorders_mean"
+  ),
+  Wave = c(
+    rep("Both waves", 8),
+    "Wave 2 only"
+  ),
+  stringsAsFactors = FALSE
+)
+
+# Combine the new rows with your existing wave_info
+wave_info <- rbind(wave_info, new_wave_info)
+
+
 # Clean environment ---------------------------------------------------------------
-rm(likert_cols)
+rm(likert_cols, new_wave_info)
