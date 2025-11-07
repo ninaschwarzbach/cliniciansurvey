@@ -3,7 +3,7 @@
 # Clinician Survey Project - Analysis Script Main -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 04.11.2025
+# Date last updated: 06.11.2025
 # ===========================================================================
 
 ### 0. To do list ---------------------------------------------------------------
@@ -16,7 +16,6 @@
 # Open: 
 
 # - fix NA in core table
-# - extract open-ended questions
 # - fix descriptive graphs - maybe extra script for plots?? 
 # - check ###
 # - clean 2. Data cleaning 
@@ -44,6 +43,7 @@
 # - draft correlations visuals
 # - draft wave 2 analysis 
 # - correlation table needs to be sorted by DV 
+# - extract open-ended questions
   
 
 ### 1. Setup ---------------------------------------------------------------
@@ -92,7 +92,7 @@ attach(.func_env, pos = 2)
 # Load cleaned data
 source("data_cleaning.R")
 
-### 3. Sample Characteristics ---------------------------------------------------------------
+names### 3. Sample Characteristics ---------------------------------------------------------------
 source("sample_characteristics.R")
 
 ### 4. Scale Creation and Item-Level Statistics ---------------------------------------------------------------
