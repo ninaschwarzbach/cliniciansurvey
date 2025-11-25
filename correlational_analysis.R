@@ -2,7 +2,7 @@
 # Clinician Survey Project - Correlational Analysis -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 04.11.2025
+# Date last updated: 21.11.2025
 # ===========================================================================
 
 
@@ -11,22 +11,21 @@
 ## 5.1 Defining important  variables ---------------------------------------------------------------
 
 # "Dependent" variables
-DVs <- c("EBMH_use", "EBMH_attitude_mean", "EBMH_openness")  # Fixed 'EBMH Openness' to 'EBMH_openness'
+DVs <- c("EBMH_use", "EBMH_attitude_mean", "EBMH_openness")  
 
 # Continuous/interval-like predictors
 continuous_preds <- c("EBMH_skills_mean", "perception_gap_mean", "workplace_influences_mean",
                       "employer_influences_mean", "research_experience_mean",
                       "EBMH_PsychDisorders_mean",
                       "Age", "YearsExperience", 
-                      "TreatmentManuals_Freq", 
+                     "EBMH_importance_clinical_expertise", 
                       grep("^SchoolSlider", names(data), value = TRUE))
 
 # Ordinal predictors
-ordinal_preds <- c("FamiliarityEBMH", "UpdatedConferences", "UpdatedWorkplace", "UpdatedSupervision",
-                   "UpdatedPrivate", "UpdatedOther", "UniversityEducation")
+ordinal_preds <- c("FamiliarityEBMH", "UniversityEducation")
 
 # Binary predictors
-binary_preds <- c("Country", "Wave", "UseEvidence_YesNo", "TreatmentManuals")
+binary_preds <- c("Country", "Wave")
 
 # Nominal predictors
 nominal_preds <- c("GenderIdentity", "Degree", "WorkSetting", "LengthTrajectory", "ProfessionalBackground")  
@@ -182,7 +181,7 @@ results_df$P.value   <- format(round(results_df$P.value, 3), nsmall = 3)
 # add column 
 results_df$EffectSize <- mapply(
   categorize_effect,
-  stat = results_df$Statistic,   # make sure the capitalization matches your column name
+  stat = as.numeric(results_df$Statistic),   
   method = results_df$Method
 )
 
@@ -199,37 +198,167 @@ results_df_reversed <- results_df_reversed[order(results_df_reversed$Predictor, 
 # Save as a new CSV
 write.csv(results_df_reversed, "outputs/cor_table_by_predictor.csv", row.names = FALSE, quote = TRUE)
 
-## 5.4 Plot   ---------------------------------------------------------------
+## 5.4 Corplot   ---------------------------------------------------------------
+cont_ord_vars <- unique(c(continuous_preds, ordinal_preds, DVs))
 corr_vis <- results_df %>%
-  filter(grepl("pearson|spearman|point-biserial", Method, ignore.case = TRUE))
+  filter(
+    DV %in% cont_ord_vars,
+    Predictor %in% cont_ord_vars,
+    grepl("pearson|spearman", Method, ignore.case = TRUE)
+  )
 
-# Optional: take absolute value if you want to emphasize magnitude
+corr_vis$Statistic <- corr_vis$Statistic |>
+  trimws() |>           
+  as.numeric()          
+
 corr_vis$AbsStat <- abs(corr_vis$Statistic)
 
 cor_plot <- ggplot(corr_vis, aes(x = Predictor, y = DV, fill = Statistic)) +
   geom_tile(color = "white") +
-  scale_fill_gradient2(low = "darkblue", high = "darkred", mid = "white", midpoint = 0,
-                       name = "r / ρ") +
+  
+  # add numeric values to the tiles
+  geom_text(aes(label = round(Statistic, 2)), size = 3.5) +
+  
+  scale_fill_gradient2(
+    low = "darkblue",
+    high = "darkred",
+    mid = "white",
+    midpoint = 0,
+    name = "ρ"
+  ) +
+  
   theme_minimal(base_size = 12) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.grid = element_blank()) +
-  labs(title = "Correlation heatmap of continuous/ordinal variables",
-       x = "Variable 1", y = "Variable 2")
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  ) +
+  labs(
+    title = "Correlation heatmap of continuous/ordinal variables",
+    x = "Variable 1",
+    y = "Variable 2"
+  ); cor_plot
 
 ggsave(
   "plots/cor_plot.png",
   cor_plot,
-  width = 20,  
+  width = 10,  
+  height = 4,   
+  dpi = 300
+)
+
+# Country 
+plot_country   <- make_split_raincloud (data, DVs, Country); plot_country
+
+# Professional background
+plot_background <- make_split_raincloud (data, DVs, ProfessionalBackground, ,   plot_title = "Professional Background"); plot_background
+
+# Gender
+## Recode, because there are almost only men and females
+data$GenderIdentity_recode <- ifelse(
+  data$GenderIdentity %in% c("Male", "Female"),
+  as.character(data$GenderIdentity),
+  NA
+)
+
+plot_gender    <- make_split_raincloud (data, DVs, GenderIdentity_recode,   plot_title = "Gender Identity"); plot_gender
+
+# Degree 
+## Recode levels 
+data <- data %>%
+  mutate(Degree = factor(Degree,
+                         levels = c("Master’s Degree or equivalent",
+                                    "PhD Degree or equivalent"),
+                         labels = c("Master's Degree", "PhD Degree")))
+
+plot_degree    <- make_split_raincloud (data, DVs, Degree,   plot_title = "Degree"); plot_degree
+
+# Combine Plots
+combined_cat_cor <- grid.arrange(`plot_country`, `plot_background`,`plot_gender`,
+                                 `plot_degree`,ncol = 2); combined_cat_cor
+
+ggsave(
+  "plots/combined_cat_cor.png",
+  combined_cat_cor,
+  width = 10,  
   height = 5,   
   dpi = 300
 )
 
+# Work setting
 
-# Exploring different correlations in more detail 
-describe.by(data$EBMH_attitude_mean, group = data$Country)
+# Filter only relevant work settings
+data_filtered <- data %>%
+  filter(WorkSetting %in% c(
+    "General mental health institution",
+    "Psychiatric hospital",
+    "Private practice",
+    "Child/youth mental health institution",
+    "Forensic institution",
+    "Specialized treatment institution (e.g. epilepsy center, sleep center)",
+    "General hospital"
+  )) %>%
+  mutate(
+    WorkSetting = recode(
+      WorkSetting,
+      "Specialized treatment institution (e.g. epilepsy center, sleep center)" = "Specialized treatment institution"
+    )
+  )
+
+
+# Pivot to long format
+stack_df <- data_filtered %>%
+  select(all_of(DVs), WorkSetting) %>%
+  pivot_longer(
+    cols = all_of(DVs),
+    names_to = "DV",
+    values_to = "value"
+  ) %>%
+  mutate(
+    DV = recode(DV,
+                "EBMH_attitude_mean" = "Attitude",
+                "EBMH_openness" = "Openness",
+                "EBMH_use" = "Use"),
+    WorkSetting = factor(WorkSetting)
+  )
+
+
+#  Custom color palette 
+pal_colors_ws <- c(
+  "General mental health institution" = "#377eb8",
+  "Psychiatric hospital" = "#6baed6",
+  "Private practice" = "#bdd7e7",
+  "Child/youth mental health institution" = "#377eb8",
+  "Forensic institution" = "#6baed6",
+  "Specialized treatment institution" = "#bdd7e7",
+  "General hospital" = "#bdbdbd"
+)
+
+# Violin + Boxplot
+gg <- ggplot(stack_df, aes(x = WorkSetting, y = value, fill = WorkSetting)) +
+  geom_boxplot(width = 0.3, color = "black", outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(width = 0.15, alpha = 0.4, size = 1.5) +
+  facet_wrap(~DV, ncol = 1) +
+  coord_flip() +
+  scale_fill_manual(values = pal_colors_ws) +
+  scale_y_continuous(limits = c(1, 5), expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "EBMH Scores by Work Setting",
+       x = "", y = "Score") +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "none")
+
+gg
+
+
+# Save
+ggsave("plots/EBMH_WorkSetting.png", gg, width = 10, height = 8, dpi = 300)
+
+
 
 # Clean environment ---------------------------------------------------------------
 rm(corr_vis, cor_plot, eta, res, results, results_df, 
    wave_info1, all_vars, binary_preds, continuous_preds, dv, 
    DVs, method, nobs, nominal_preds, ordinal_preds, 
    pred, pval, rowi, stat, var, x, y, results_df_reversed)
+
+data$GenderIdentity_recode <- NULL
+

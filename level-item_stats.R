@@ -2,7 +2,7 @@
 # Clinician Survey Project - Level-Item Statistics -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 28.10.2025
+# Date last updated: 20.11.2025
 # ===========================================================================
 
 
@@ -79,6 +79,10 @@ data$EBMH_attitude_mean <- rowMeans(data[, c("AttitudeEBMH1", "AttitudeEBMH2")],
                                     na.rm = TRUE) # two items for attitude
 data$EBMH_importance_clinical_expertise <- data$AttitudeEBMH3 # making this a separate item
 
+# Changing this also in wave_info
+wave_info <- rbind(wave_info,
+                   data.frame(Variable = "EBMH_importance_clinical_expertise",
+                              Wave     = "Both waves"))
 # Updated scale items 
 scale_items <- list(
   EBMH_skills = c("EBMHSkills1", "EBMHSkills2", "EBMHSkills3"),

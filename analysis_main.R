@@ -3,7 +3,7 @@
 # Clinician Survey Project - Analysis Script Main -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 06.11.2025
+# Date last updated: 21.11.2025
 # ===========================================================================
 
 ### 0. To do list ---------------------------------------------------------------
@@ -61,6 +61,7 @@ library(rlang)
 library(gridExtra)
 library(stringr)
 library(reshape2)
+library(ggrain)
 
 
 ## 1.2 Set working directory
@@ -104,6 +105,7 @@ source("level-item_stats.R")
 
 ### 5. Descriptives ---------------------------------------------------------------
 source("descriptives.R")
+source("wave2_descriptives.R")
 
 ### 6. Correlational analysis ---------------------------------------------------------------
 source("correlational_analysis.R")

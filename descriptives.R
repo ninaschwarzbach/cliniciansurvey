@@ -2,7 +2,7 @@
 # Clinician Survey Project - Descriptives -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 28.10.2025
+# Date last updated: 20.11.2025
 # ===========================================================================
 
 
@@ -10,6 +10,7 @@
 # Descriptives Core outcomes 
 ## compute descriptives by Wave and total
 desc_table_1 <- describe_continuous_by_group(data, desc_vars, group = "Wave", save = TRUE, file_prefix = "outputs/descriptives_continuous_main"); desc_table_1
+
 
 ## Plots
 ### do we really need to plot "other" options??
@@ -70,6 +71,7 @@ ggsave(
 
 combined_violin_independentvars <- grid.arrange(`violin_EBMH_Skills_(mean)`, `violin_Perception_Gap_(mean)`, 
                                                 `violin_Workplace_Influences_(mean)`, `violin_Employer_Influences_(mean)`, 
+                                                `violin_Importance:_clinical_expertise`,
                                                 `violin_Research_Experience_(mean)`, violin_Familiarity_with_EBMH,
                                                 ncol = 2)
 ggsave(

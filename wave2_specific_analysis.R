@@ -1,12 +1,12 @@
 # ===========================================================================
-# Clinician Survey Project - Wave 2 specific analysis -
+# Clinician Survey Project - Occasions Discussion Evidence -
 # Author: Nina Schwarzbach
 # Start date: 31.09.2025
 # Date last updated: 03.11.2025
 # ===========================================================================
 
 
-# Wave 2 specific analyses
+# Occasions Discussion Evidence (wave 2 specific analyses)
 
 ## 6.1 Data   ---------------------------------------------------------------
 

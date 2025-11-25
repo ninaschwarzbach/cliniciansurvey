@@ -2,7 +2,7 @@
 # Clinician Survey Project - Functions
 # Author: Nina Schwarzbach
 # Start date: 01.10.2025
-# Date last updated: 28.10.2025
+# Date last updated: 21.11.2025
 # ===========================================================================
 
 # Data Cleaning
@@ -10,7 +10,6 @@
  ## Function for transforming Likert (5 point) to numbers
     likert_to_num <- function(x) {
       x <- trimws(tolower(x))  # remove spaces, lowercase
-      # Only map valid Likert responses
       case_when(
         x %in% c("strongly agree") ~ 5,
         x %in% c("agree") ~ 4,
@@ -507,4 +506,87 @@
       }
     }
     
+    
+# Make split plots for correlations
+    make_split_raincloud <- function(data, DVs, group_var,
+                                     violin_alpha = 0.5,
+                                     box_width = 0.08,
+                                     box_fill = "white",
+                                     palette = "Dark2",
+                                     show_legend = TRUE,
+                                     plot_title = NULL) {
+      group_var <- ensym(group_var)
+      
+      df <- data %>%
+        select(all_of(DVs), {{group_var}}) %>%
+        filter(!is.na({{group_var}})) %>%
+        mutate({{group_var}} := factor({{group_var}})) %>%
+        pivot_longer(
+          cols = all_of(DVs),
+          names_to = "DV",
+          values_to = "value"
+        ) %>%
+        mutate(
+          DV = recode(DV,
+                      "EBMH_attitude_mean" = "Attitude",
+                      "EBMH_openness"      = "Openness",
+                      "EBMH_use"           = "Use")
+        )
+      
+      groups <- levels(df[[rlang::as_name(group_var)]])
+      if(length(groups) != 2){
+        stop("This function currently supports exactly 2 levels in the grouping variable.")
+      }
+      
+      d1 <- df %>% filter({{group_var}} == groups[1])
+      d2 <- df %>% filter({{group_var}} == groups[2])
+      
+      ggplot() +
+        geom_half_violin(
+          data = d1,
+          aes(x = DV, y = value, fill = !!group_var),
+          side = "l", trim = FALSE, alpha = violin_alpha
+        ) +
+        geom_half_violin(
+          data = d2,
+          aes(x = DV, y = value, fill = !!group_var),
+          side = "r", trim = FALSE, alpha = violin_alpha
+        ) +
+        geom_boxplot(
+          data = d1,
+          aes(x = DV, y = value),
+          width = box_width,
+          fill = box_fill,
+          color = "black",
+          alpha = 0.9,
+          outlier.shape = NA,
+          position = position_nudge(x = -0.1)
+        ) +
+        geom_boxplot(
+          data = d2,
+          aes(x = DV, y = value),
+          width = box_width,
+          fill = box_fill,
+          color = "black",
+          alpha = 0.9,
+          outlier.shape = NA,
+          position = position_nudge(x = 0.1)
+        ) +
+        scale_fill_brewer(palette = palette, name = NULL)+
+      labs(
+          title = if (!is.null(plot_title)) plot_title else paste(rlang::as_name(group_var)),
+          x = NULL,
+          y = "Score"
+        ) +
+        coord_cartesian(clip = "off") +
+        theme_classic() +
+        theme(
+          axis.text.x = element_text(size = 12),
+          strip.text = element_text(face = "bold", size = 14),
+          strip.background = element_blank(),
+          legend.position = if (show_legend) "right" else "none",
+          legend.title = element_text(size = 13),
+          legend.text = element_text(size = 12)
+        )
+    }
     
