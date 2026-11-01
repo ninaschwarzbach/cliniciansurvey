@@ -2,7 +2,7 @@
 # Clinician Survey Project - Level-Item Statistics -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 20.11.2025
+# Date last updated: 19.08.2026
 # ===========================================================================
 
 
@@ -14,70 +14,98 @@ scale_items <- list(
   perception_gap = c("PerceptionGap1", "PerceptionGap2"),
   EBMH_attitude = c("AttitudeEBMH1", "AttitudeEBMH2", "AttitudeEBMH3", "AttitudeEBMH4"),
   workplace_influences = c("WorkplaceInfluences1", "WorkplaceInfluences2", 
-                           "WorkplaceInfluences3", "WorkplaceInfluences4"),
+                           "WorkplaceInfluences3", "WorkplaceInfluences4", 
+                           "WorkplaceInfluences5"),
   employer_influences = c("EmployerInfluences1", "EmployerInfluences2", 
                           "EmployerInfluences3", "EmployerInfluences4", 
                           "EmployerInfluences5", "EmployerInfluences6", 
-                          "WorkplaceInfluences5", "EmployerInfluences7"),
+                           "EmployerInfluences7"),
   research_experience = c("ResearchExperience1", "ResearchExperience2"), # Corrected from duplicate
   EBMH_PsychDisorders = c("EBMHPsychDisorders1", "EBMHPsychDisorders2")
 )
 
-# Cronbach's alpha
-alpha_results <- lapply(names(scale_items), function(scale_name) {
-  items <- scale_items[[scale_name]]
-  items <- intersect(items, names(data))  # only keep existing columns
+# Reliability
+
+
+reliability_results <- lapply(names(scale_items), function(scale_name) {
   
-  if (length(items) < 2) {
+  items <- intersect(scale_items[[scale_name]], names(data))
+  n_items <- length(items)
+  
+  if (n_items < 2) {
     return(data.frame(
       Scale = scale_name,
-      N_Items = length(items),
-      Alpha = NA,
-      Mean_r = NA,
+      N_Items = n_items,
+      Cronbach_Alpha = NA_real_,
+      Guttman_Lambda2 = NA_real_,
+      Mean_r = NA_real_,
       Note = "Not enough items"
     ))
   }
   
-  a <- psych::alpha(data[items])
+  item_data <- data[, items, drop = FALSE]
+  
+  # Cronbach's alpha
+  alpha_out <- psych::alpha(
+    item_data,
+    check.keys = FALSE,
+    warnings = FALSE
+  )
+  
+  # Guttman's lambda 2
+  lambda2 <- guttman_lambda2(item_data)
   
   data.frame(
     Scale = scale_name,
-    N_Items = length(items),
-    Alpha = round(a$total$raw_alpha, 3),
-    Mean_r = round(a$total$average_r, 3),
-    Note = ""
+    N_Items = n_items,
+    Cronbach_Alpha = round(alpha_out$total$raw_alpha, 3),
+    Guttman_Lambda2 = round(lambda2, 3),
+    Mean_r = round(alpha_out$total$average_r, 3),
+    Note = ifelse(
+      n_items == 2,
+      "Two-item scale; interpret reliability cautiously",
+      ""
+    )
   )
 }) %>%
-  do.call(rbind, .)
+  bind_rows()
 
-# Print and save results
-cat("\nCronbach’s Alpha Results:\n")
-print(alpha_results)
+cat("\nReliability Results:\n")
+print(reliability_results)
 
 # Correlation for 2 item scales 
 cor(data$UseEBMH1, data$UseEBMH2, use = "pairwise.complete.obs")
 cor(data$PerceptionGap1, data$PerceptionGap2, use = "pairwise.complete.obs")
 
-# Scale with low reliability and 2+ items
-alpha(data[scale_items[["EBMH_attitude"]]])$item.stats
+# Checking if attitude is improved with less items
+full <- data[, c("AttitudeEBMH1", "AttitudeEBMH2",
+                 "AttitudeEBMH3", "AttitudeEBMH4")]
 
-# Checking if alpha would be better without item 3 and 4 
-# Full scale
-alpha(data[, c("AttitudeEBMH1", "AttitudeEBMH2", "AttitudeEBMH3", "AttitudeEBMH4")])
+alpha(full)$total
+guttman_lambda2(full)
 
 # Without item 4
-alpha(data[, c("AttitudeEBMH1", "AttitudeEBMH2", "AttitudeEBMH3")])
+no4 <- data[, c("AttitudeEBMH1", "AttitudeEBMH2",
+                "AttitudeEBMH3")]
+
+alpha(no4)$total
+guttman_lambda2(no4)
 
 # Without items 3 and 4
-alpha(data[, c("AttitudeEBMH1", "AttitudeEBMH2")])
-cor(data$AttitudeEBMH1, data$AttitudeEBMH2, use = "pairwise.complete.obs")
+no34 <- data[, c("AttitudeEBMH1", "AttitudeEBMH2")]
 
+alpha(no34)$total
+guttman_lambda2(no34)
 # Change items with low internal consistency
 data$EBMH_use <- data$UseEBMH1 # only one item for use
 data$EBMH_openness <- data$UseEBMH2 # making this a separate item
 data$EBMH_attitude_mean <- rowMeans(data[, c("AttitudeEBMH1", "AttitudeEBMH2")],
                                     na.rm = TRUE) # two items for attitude
-data$EBMH_importance_clinical_expertise <- data$AttitudeEBMH3 # making this a separate item
+# Decided to change this (see manuscript)
+# AttitudeEBMH3 was reverse-coded at wave level to align with the attitude
+# scale. As a standalone variable it should carry its original meaning
+# (high = clinical experience valued over research), so reverse it back.
+data$EBMH_importance_clinical_expertise <- 6 - data$AttitudeEBMH3
 
 # Changing this also in wave_info
 wave_info <- rbind(wave_info,
@@ -89,7 +117,8 @@ scale_items <- list(
   perception_gap = c("PerceptionGap1", "PerceptionGap2"),
   EBMH_attitude = c("AttitudeEBMH1", "AttitudeEBMH2"), 
   workplace_influences = c("WorkplaceInfluences1", "WorkplaceInfluences2", 
-                           "WorkplaceInfluences3", "WorkplaceInfluences4"),
+                           "WorkplaceInfluences3", "WorkplaceInfluences4", 
+                           "WorkplaceInfluences5"),
   employer_influences = c("EmployerInfluences1", "EmployerInfluences2", 
                           "EmployerInfluences3", "EmployerInfluences4", 
                           "EmployerInfluences5", "EmployerInfluences6", 
@@ -100,7 +129,8 @@ scale_items <- list(
 
 # Combine all items into a single vector
 all_items <- unlist(scale_items)
-extra_single_items <- c("UseEBMH1", "UseEBMH2", "AttitudeEBMH3")  # Keep item4 out
+extra_single_items <- c("UseEBMH1", "UseEBMH2", 
+                        "EBMH_importance_clinical_expertise")  # Keep item4 out
 all_items <- unique(c(unlist(scale_items), extra_single_items))
 
 
@@ -174,5 +204,7 @@ print(low_variance_items)
 
 
 # Clean environment ---------------------------------------------------------------
-rm(alpha_results, floor_ceiling_results, item_stats, low_variance_items, scale_items, variance_stats, 
-   all_items, extra_single_items, low_variance_threshold, max_scale, min_scale)
+rm(floor_ceiling_results, item_stats, low_variance_items, scale_items, variance_stats, 
+   all_items, extra_single_items, low_variance_threshold, max_scale, min_scale, 
+   reliability_results, no34, no4, full)
+

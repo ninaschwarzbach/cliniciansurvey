@@ -588,19 +588,7 @@
           mutate(Age_z = scale(Age)[,1],
                  Age_outlier = ifelse(is.na(Age_z), FALSE, abs(Age_z) > 3.29))
         
-    # Years Experience
-      #Boxplot
-        boxplot_experience <-ggplot(combined, aes(x = Wave, y = YearsExperience, fill = Wave)) +
-          geom_boxplot(color = "darkblue") +
-          labs(
-            title = "Boxplot of Years of Experience by Wave",
-            y = "Years of Experience",
-            x = "Wave"
-          ) +
-          theme_minimal() +
-          scale_fill_manual(values = c("skyblue", "lightgreen")); boxplot_experience 
-        
-        save_plot(boxplot_experience, "boxplot_years_experience")
+  
         
       # Inspect flagged cases
         outliers <- combined %>% filter(YearsExperience_outlier); outliers 
@@ -614,8 +602,85 @@
         wave1$YearsExperience[c(38, 152) ]
         # Exclude those with less than 1 year
           wave1 <- wave1[-c(38, 152), ]
-        
-        
+        # Exclude those that have missing values at Experience
+          wave1 <- wave1 %>%
+            filter(!(Finished == "False" & is.na(YearsExperience)))
+          wave2 <- wave2 %>%
+            filter(!(Finished == "False" & is.na(YearsExperience)))
+          
+# Final inclusion criterion based on raw outcome items 
+    # Note that this is based on the final scales of EBMH use, attitude, and
+    # openness
+          
+          # Wave 1
+          wave1 <- wave1 %>%
+            mutate(
+              use_completed = !is.na(UseEBMH1),
+              
+              openness_completed = !is.na(UseEBMH2),
+              
+              # attitude can be calculated when at least one item is answered
+              attitude_completed =
+                !is.na(AttitudeEBMH1) |
+                !is.na(AttitudeEBMH2),
+              
+              n_outcomes_completed = rowSums(
+                cbind(
+                  use_completed,
+                  openness_completed,
+                  attitude_completed
+                )
+              )
+            )
+          
+          # Wave 2
+          wave2 <- wave2 %>%
+            mutate(
+              use_completed = !is.na(UseEBMH1),
+              
+              openness_completed = !is.na(UseEBMH2),
+              
+              attitude_completed =
+                !is.na(AttitudeEBMH1) |
+                !is.na(AttitudeEBMH2),
+              
+              n_outcomes_completed = rowSums(
+                cbind(
+                  use_completed,
+                  openness_completed,
+                  attitude_completed
+                )
+              )
+            )
+          
+          # Inclusion and exclusion counts by wave
+          outcome_counts <- bind_rows(
+            wave1 %>%
+              summarise(
+                Wave = "Wave 1",
+                Before = n(),
+                Included = sum(n_outcomes_completed >= 2),
+                Excluded = sum(n_outcomes_completed < 2)
+              ),
+            
+            wave2 %>%
+              summarise(
+                Wave = "Wave 2",
+                Before = n(),
+                Included = sum(n_outcomes_completed >= 2),
+                Excluded = sum(n_outcomes_completed < 2)
+              )
+          )
+          
+          print(outcome_counts)
+      
+    # Remove participants with fewer than 2 completed outcomes
+          wave1 <- wave1 %>%
+            filter(n_outcomes_completed >= 2)
+          
+          wave2 <- wave2 %>%
+            filter(n_outcomes_completed >= 2)
+   
     # Year Graduation 
       # Inspect flagged cases
         outliers <- combined %>% filter(GraduationYear_outlier); outliers 
@@ -626,38 +691,11 @@
         combined$GraduationYear <- with(combined, ifelse(GraduationYear == 33, NA, GraduationYear)) 
         combined$GraduationYear <- with(combined, ifelse(GraduationYear == 21, 2021, GraduationYear))    
         
-      #Boxplot
-        boxplot_grad <-ggplot(combined, aes(x = Wave, y = GraduationYear, fill = Wave)) +
-          geom_boxplot(color = "darkblue") +
-          labs(
-            title = "Boxplot of Graduation Year by Wave",
-            y = "Graduation Year",
-            x = "Wave"
-          ) +
-          theme_minimal() +
-          scale_fill_manual(values = c("skyblue", "lightgreen")); boxplot_grad
-        
-        save_plot(boxplot_grad, "boxplot_grad")
-        
     # Age 
       # Inspect flagged cases
         outliers <- combined %>% filter(Age_outlier); outliers 
       
-      #Boxplot
-        boxplot_age <-ggplot(combined, aes(x = Wave, y = Age, fill = Wave)) +
-          geom_boxplot(color = "darkblue") +
-          labs(
-            title = "Age by Wave",
-            y = "Age",
-            x = "Wave"
-          ) +
-          theme_minimal() +
-          scale_fill_manual(values = c("skyblue", "lightgreen")); boxplot_age
 
-        save_plot(boxplot_age, "boxplot_age")
-        
-  # Remove 
-    rm(combined, outliers, boxplot_age, boxplot_experience, boxplot_grad)
         
 # Separate Qualitative Data
   quali_wave1 <- wave1 %>%
@@ -735,5 +773,39 @@
   # Delete participant ID 
     data <- data %>% select(-c(Participant_ID, ParticipationPreviousStudy)) ### In the end, think if you need to remove more if you want to make data public 
     
+    
+    
+    # Years Experience
+    #Boxplot
+    boxplot_experience <-ggplot(data, aes(x = Wave, y = YearsExperience, fill = Wave)) +
+      geom_boxplot(color = "black", na.rm = TRUE) +
+      labs(
+        title = "Boxplot of Years of Experience by Wave",
+        y = "Years of Experience",
+        x = "Wave"
+      ) +
+      theme_minimal() +
+      scale_fill_manual(values = c("#AF97A2", "#7FB685")); boxplot_experience 
+    
+    save_plot(boxplot_experience, "boxplot_years_experience")
+    
+    
+    #Boxplot
+    boxplot_age <-ggplot(data, aes(x = Wave, y = Age, fill = Wave)) +
+      geom_boxplot(color = "black", na.rm = TRUE) +
+      labs(
+        title = "Age by Wave",
+        y = "Age",
+        x = "Wave"
+      ) +
+      theme_minimal() +
+      scale_fill_manual(values = c("#AF97A2", "#7FB685")); boxplot_age
+    
+    save_plot(boxplot_age, "boxplot_age")
+    
+    
+    
+    # Remove 
+    rm(combined, outliers, boxplot_age, boxplot_experience, outcome_counts)
     
     

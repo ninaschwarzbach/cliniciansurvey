@@ -3,7 +3,7 @@
 # Clinician Survey Project - Scale Creation -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 04.11.2025
+# Date last updated: 13.08.2026
 # ===========================================================================
 
 ## Transform Likert to numbers 
@@ -23,7 +23,8 @@ data$EBMH_skills_mean <- rowMeans(data[, c("EBMHSkills1", "EBMHSkills2", "EBMHSk
 data$perception_gap_mean <- rowMeans(data[, c("PerceptionGap1", "PerceptionGap2" )], na.rm = TRUE)
 data$EBMH_attitude_mean <- rowMeans(data[, c( "AttitudeEBMH1", "AttitudeEBMH2", "AttitudeEBMH3" , "AttitudeEBMH4")], na.rm = TRUE)
 data$workplace_influences_mean <- rowMeans(data[, c("WorkplaceInfluences1", "WorkplaceInfluences2", 
-                                                    "WorkplaceInfluences3", "WorkplaceInfluences4")], na.rm = TRUE)
+                                                    "WorkplaceInfluences3", "WorkplaceInfluences4", 
+                                                    "WorkplaceInfluences5")], na.rm = TRUE)
 data$employer_influences_mean <- rowMeans(data[, c("EmployerInfluences1", "EmployerInfluences2",
                                                    "EmployerInfluences3", "EmployerInfluences4",                
                                                    "EmployerInfluences5", "EmployerInfluences6",
@@ -57,3 +58,4 @@ wave_info <- rbind(wave_info, new_wave_info)
 
 # Clean environment ---------------------------------------------------------------
 rm(likert_cols, new_wave_info)
+

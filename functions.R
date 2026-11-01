@@ -2,7 +2,7 @@
 # Clinician Survey Project - Functions
 # Author: Nina Schwarzbach
 # Start date: 01.10.2025
-# Date last updated: 21.11.2025
+# Date last updated: 13.08.2026
 # ===========================================================================
 
 # Data Cleaning
@@ -75,7 +75,43 @@
         df
       }
       
-    
+# Function for Guttman's lambda
+      guttman_lambda2 <- function(x, use = "pairwise.complete.obs") {
+      
+      x <- as.data.frame(x)
+      
+      # Remove variables with no variance
+      keep <- vapply(x, function(z) {
+        stats::var(z, na.rm = TRUE) > 0
+      }, logical(1))
+      
+      x <- x[, keep, drop = FALSE]
+      
+      if (ncol(x) < 2) {
+        return(NA_real_)
+      }
+      
+      S <- stats::cov(x, use = use)
+      
+      k <- ncol(S)
+      
+      # Variance of the total score
+      total_variance <- sum(S)
+      
+      # Guttman's lambda 1
+      lambda1 <- 1 - sum(diag(S)) / total_variance
+      
+      # Sum of squared off-diagonal covariances
+      off_diagonal <- S[row(S) != col(S)]
+      C2 <- sum(off_diagonal^2)
+      
+      # Guttman's lambda 2
+      lambda2 <- lambda1 +
+        sqrt((k / (k - 1)) * C2) / total_variance
+      
+      lambda2
+      }
+
 # Descriptives
   ##  Function for frequency table
     freq_table <- function(data, col) {
@@ -272,134 +308,157 @@
     
 # Plots
   # Theme
-    theme_plots <- function() {
-      theme_minimal(base_size = 13, base_family = "sans") +
-        theme(
-          plot.title = element_text(size = 16, hjust = 0.5),
-          axis.title = element_text(size = 14),
-          axis.text = element_text(size = 14),
-          legend.position = "none",
-          panel.grid.major = element_line(color = "gray90"),
-          panel.grid.minor = element_blank(),
-          panel.border = element_blank(),
-          plot.margin = margin(10, 10, 10, 10)
-        )
-    }
+      theme_plots <- function(base_size = 13) {
+        theme_minimal(base_size = base_size, base_family = "sans") +
+          theme(
+            plot.title      = element_text(size = base_size + 3, hjust = 0.5),
+            axis.title      = element_text(size = base_size + 1),
+            axis.text       = element_text(size = base_size),
+            strip.text      = element_text(size = base_size, face = "bold"),
+            panel.grid.major = element_line(color = "gray90"),
+            panel.grid.minor = element_blank(),
+            panel.border    = element_blank(),
+            plot.margin     = margin(10, 10, 10, 10)
+          )
+      }
     
   # Save plots
-    save_plot <- function(plot, filename, folder = "plots", width = 8, height = 6, dpi = 300) {
-      # Create folder if it doesn’t exist
-      if (!dir.exists(folder)) dir.create(folder, recursive = TRUE)
-      
-      # Apply consistent theme and save
-      final_plot <- plot + theme_plots()
-      
-      # Save to file (PNG by default)
-      ggsave(
-        filename = file.path(folder, paste0(filename, ".png")),
-        plot = final_plot,
-        width = width,
-        height = height,
-        dpi = dpi
-      )
-      
-      message("Plot saved to: ", file.path(folder, paste0(filename, ".png")))
-      return(final_plot)
-    }
-    
-  # Half violin function
-    split_violin_total <- function(data,
-                                   var,
-                                   title = NULL,
-                                   wave1 = "Wave 1",
-                                   wave2 = "Wave 2",
-                                   total_name = "Total",
-                                   palette = "Set2",
-                                   box_fill = "grey80",
-                                   box_width = 0.15,
-                                   violin_alpha = 0.6,
-                                   show_legend = TRUE,
-                                   ...) {
-      
-      # Handle quoted/unquoted variable
-      var_sym <- if (is.character(var) && length(var) == 1) sym(var) else enquo(var)
-      
-      # Sanity checks
-      if (!"Wave" %in% names(data))
-        stop("`data` must contain a column named 'Wave'.")
-      if (!all(c(wave1, wave2) %in% unique(data$Wave)))
-        stop(paste0("Please ensure both '", wave1, "' and '", wave2, "' exist in data$Wave."))
-      
-      # Prepare datasets
-      data_total <- data %>% mutate(Wave = total_name)
-      d1 <- data %>% filter(Wave == wave1)
-      d2 <- data %>% filter(Wave == wave2)
-      
-      # Build plot
-      p <- ggplot() +
-        geom_half_violin(
-          data = d1,
-          aes(x = 1, y = !!var_sym, fill = Wave),
-          side = "l", trim = FALSE, alpha = violin_alpha, ...
-        ) +
-        geom_half_violin(
-          data = d2,
-          aes(x = 1, y = !!var_sym, fill = Wave),
-          side = "r", trim = FALSE, alpha = violin_alpha, ...
-        ) +
-        geom_boxplot(
-          data = data_total,
-          aes(x = 1, y = !!var_sym),
-          width = box_width,
-          fill = box_fill,
-          color = "black",
-          alpha = 0.9,
-          outlier.shape = NA
-        ) +
-        scale_fill_brewer(palette = palette, name = "Wave") +
-        labs(title = title, x = NULL, 
-             y = as_label(var_sym)) +
-        coord_cartesian(clip = "off") +
-        theme_plots() + 
-        theme(
-          legend.position = if (show_legend) "right" else "none",
-          legend.title = element_text(size = 13),
-          legend.text = element_text(size = 12)
+      save_plot <- function(plot, filename, folder = "plots",
+                            width = 8, height = 6, dpi = 300) {
+        if (!dir.exists(folder)) dir.create(folder, recursive = TRUE)
+        ggsave(
+          filename = file.path(folder, paste0(filename, ".png")),
+          plot = plot, width = width, height = height, dpi = dpi
         )
+        message("Plot saved to: ", file.path(folder, paste0(filename, ".png")))
+        invisible(plot)
+      }
       
-      return(p)
-    }
-
-    
-    # Save violin plots
-    save_violin <- function(plot,
-                            filename,
-                            folder = "plots",
-                            legend_position = "right",
-                            width = 5,
-                            height = 6,
-                            dpi = 300) {
-      # Create folder if needed
-      if (!dir.exists(folder)) dir.create(folder, recursive = TRUE)
+      # Boxplot + raw points by wave. For continuous vars and scale means.
+      wave_box <- function(data, var,
+                           title = NULL, ylab = NULL,
+                           y_limits = c(1, 5),
+                           show_points = TRUE,
+                           show_legend = FALSE) {
+        
+        var_sym  <- if (is.character(var) && length(var) == 1) rlang::sym(var) else rlang::ensym(var)
+        var_name <- rlang::as_name(var_sym)
+        
+        if (!"Wave" %in% names(data)) stop("`data` must contain a column named 'Wave'.")
+        if (!var_name %in% names(data)) stop("Variable not found in `data`: ", var_name)
+        
+        d <- data %>%
+          dplyr::select(Wave, value = !!var_sym) %>%
+          dplyr::filter(!is.na(Wave), !is.na(value), is.finite(value)) %>%
+          dplyr::mutate(Wave = factor(Wave))
+        
+        if (nrow(d) == 0) stop("No valid observations for `", var_name, "`.")
+        
+        p <- ggplot(d, aes(x = Wave, y = value, fill = Wave)) +
+          geom_boxplot(width = 0.5, colour = "black", alpha = 0.85,
+                       outlier.shape = NA, na.rm = TRUE)
+        
+        if (show_points) {
+          p <- p + geom_jitter(width = 0.12, height = 0.06, alpha = 0.25,
+                               size = 1, na.rm = TRUE)
+        }
+        
+        p <- p +
+          stat_summary(fun = mean, geom = "point", shape = 23,
+                       size = 2.5, fill = "white", colour = "black", na.rm = TRUE) +
+          scale_fill_manual(values = wave_colors, drop = FALSE) +
+          labs(title = title, x = NULL,
+               y = if (is.null(ylab)) var_name else ylab) +
+          theme_plots() +
+          theme(legend.position = if (show_legend) "right" else "none")
+        
+        if (!is.null(y_limits)) p <- p + coord_cartesian(ylim = y_limits)
+        p
+      }
       
-      # Apply consistent theme and legend position
-      final_plot <- plot +
-        theme_plots() +
-        theme(legend.position = legend_position)
-      
-      # Save to file
-      ggsave(
-        filename = file.path(folder, paste0(filename, ".png")),
-        plot = final_plot,
-        width = width,
-        height = height,
-        dpi = dpi
-      )
-      message("Violin plot saved to: ", file.path(folder, paste0(filename, ".png")))
-      return(final_plot)
-    }
+      # Faceted boxplots for several scale means at once
+      box_panel <- function(data, vars, labels = NULL, ncol = 3,
+                            y_limits = c(1, 5), title = NULL,
+                            show_points = TRUE) {
+        
+        vars <- intersect(vars, names(data))
+        if (!length(vars)) stop("None of `vars` found in data.")
+        labs_vec <- if (is.null(labels)) stats::setNames(vars, vars) else labels[vars]
+        
+        d <- data %>%
+          dplyr::select(Wave, dplyr::all_of(vars)) %>%
+          tidyr::pivot_longer(dplyr::all_of(vars),
+                              names_to = "Variable", values_to = "value",
+                              values_drop_na = TRUE) %>%
+          dplyr::filter(!is.na(Wave), is.finite(value)) %>%
+          dplyr::mutate(
+            Wave     = factor(Wave),
+            Variable = factor(unname(labs_vec[Variable]), levels = unname(labs_vec))
+          )
+        
+        p <- ggplot(d, aes(x = Wave, y = value, fill = Wave)) +
+          geom_boxplot(width = 0.5, colour = "black", alpha = 0.85,
+                       outlier.shape = NA, na.rm = TRUE)
+        
+        if (show_points) {
+          p <- p + geom_jitter(width = 0.12, height = 0.06, alpha = 0.2,
+                               size = 0.8, na.rm = TRUE)
+        }
+        
+        p <- p +
+          stat_summary(fun = mean, geom = "point", shape = 23,
+                       size = 2, fill = "white", colour = "black", na.rm = TRUE) +
+          facet_wrap(~ Variable, ncol = ncol) +
+          scale_fill_manual(values = wave_colors, drop = FALSE) +
+          labs(title = title, x = NULL, y = "Score") +
+          theme_plots() +
+          theme(legend.position = "none")
+        
+        if (!is.null(y_limits)) p <- p + coord_cartesian(ylim = y_limits)
+        p
+      }
     
-    
+      # Stacked percent bars for single Likert items
+      likert_panel <- function(data, vars, labels = NULL, ncol = 2,
+                               response_labels = c("Strongly disagree", "Disagree",
+                                                   "Neutral", "Agree", "Strongly agree"),
+                               title = NULL, min_pct_label = 7) {
+        
+        vars <- intersect(vars, names(data))
+        if (!length(vars)) stop("None of `vars` found in data.")
+        labs_vec <- if (is.null(labels)) stats::setNames(vars, vars) else labels[vars]
+        
+        d <- data %>%
+          dplyr::select(Wave, dplyr::all_of(vars)) %>%
+          tidyr::pivot_longer(dplyr::all_of(vars),
+                              names_to = "Variable", values_to = "value") %>%
+          dplyr::filter(!is.na(value), !is.na(Wave)) %>%
+          dplyr::mutate(
+            Variable = factor(unname(labs_vec[Variable]), levels = unname(labs_vec)),
+            Response = factor(round(as.numeric(value)),
+                              levels = 1:5, labels = response_labels)
+          ) %>%
+          dplyr::count(Variable, Wave, Response) %>%
+          dplyr::group_by(Variable, Wave) %>%
+          dplyr::mutate(pct = 100 * n / sum(n), n_group = sum(n)) %>%
+          dplyr::ungroup() %>%
+          dplyr::mutate(WaveLab = paste0(Wave, " (n=", n_group, ")"))
+        
+        fills <- stats::setNames(likert_colors, response_labels)
+        
+        ggplot(d, aes(x = WaveLab, y = pct, fill = Response)) +
+          geom_col(width = 0.65, colour = "white") +
+          geom_text(aes(label = ifelse(pct >= min_pct_label, sprintf("%.0f%%", pct), "")),
+                    position = position_stack(vjust = 0.5), size = 3, colour = "black") +
+          facet_wrap(~ Variable, ncol = ncol) +
+          coord_flip() +
+          scale_fill_manual(values = fills, drop = FALSE) +
+          scale_y_continuous(expand = expansion(mult = c(0, 0.02))) +
+          labs(title = title, x = NULL, y = "% of respondents", fill = NULL) +
+          theme_plots() +
+          theme(legend.position = "bottom",
+                panel.grid.major.y = element_blank())
+      }
 # Correlation functions 
     # Cramer's V 
     cramers_v <- function(x, y) {
@@ -412,6 +471,7 @@
       as.numeric(sqrt(chi / (n * (k - 1))))
     }
     
+## CI helper functions
     # Eta-squared (for nominal predictor vs continuous DV)
     eta_squared <- function(dv, group) {
       # require at least two groups
@@ -428,25 +488,83 @@
     }
     
     # decide Pearson vs Spearman for two numeric-ish vectors
-    choose_corr <- function(x, y) {
-      # x and y are numeric vectors (with NAs)
-      ok <- complete.cases(x, y)
-      n <- sum(ok)
-      if (n < 3) return(list(method = NA, cor = NA, p = NA, n = n))
-      x2 <- x[ok]; y2 <- y[ok]
-      # if both roughly normal -> Pearson, else Spearman
-      use_pearson <- FALSE
-      # Only run shapiro when n between 3 and 5000 (shapiro limitation)
-      shapiro_ok <- (n >= 3 & n <= 5000)
-      if (shapiro_ok) {
-        sx <- tryCatch(shapiro.test(x2)$p.value, error = function(e) NA)
-        sy <- tryCatch(shapiro.test(y2)$p.value, error = function(e) NA)
-        if (!is.na(sx) && !is.na(sy) && sx > 0.05 && sy > 0.05) use_pearson <- TRUE
+    choose_corr <- function(x, y, force_method = NULL) {
+      # Track whether each input was ordinal *before* converting to numeric,
+      # since that's what should drive the Pearson/Spearman decision.
+      x_is_ordinal <- is.ordered(x)
+      y_is_ordinal <- is.ordered(y)
+      
+      # Convert ordered factors to their numeric ranks.
+      # Numeric variables remain unchanged.
+      to_numeric <- function(z) {
+        if (is.ordered(z)) {
+          return(as.numeric(z))
+        }
+        
+        if (is.factor(z)) {
+          stop(
+            "Unordered factors cannot be used in choose_corr(). ",
+            "Use an association measure appropriate for nominal variables."
+          )
+        }
+        
+        as.numeric(z)
       }
-      method <- if (use_pearson) "pearson" else "spearman"
-      ct <- tryCatch(cor.test(x2, y2, method = method), error = function(e) NULL)
-      if (is.null(ct)) return(list(method = method, cor = NA, p = NA, n = n))
-      list(method = method, cor = as.numeric(ct$estimate), p = as.numeric(ct$p.value), n = n)
+      
+      x_num <- to_numeric(x)
+      y_num <- to_numeric(y)
+      
+      # Decide the method:
+      # - Pearson only if BOTH variables are continuous (not ordinal).
+      # - Spearman if either variable is ordinal.
+      # - force_method overrides the automatic choice if supplied.
+      method <- if (!is.null(force_method)) {
+        match.arg(force_method, c("pearson", "spearman"))
+      } else if (x_is_ordinal || y_is_ordinal) {
+        "spearman"
+      } else {
+        "pearson"
+      }
+      
+      # Use pairwise complete observations.
+      ok <- complete.cases(x_num, y_num)
+      n <- sum(ok)
+      
+      if (n < 3L) {
+        return(list(method = method, cor = NA_real_, p = NA_real_, n = n))
+      }
+      
+      x_complete <- x_num[ok]
+      y_complete <- y_num[ok]
+      
+      # A correlation cannot be calculated when either variable is constant.
+      if (
+        length(unique(x_complete)) < 2L ||
+        length(unique(y_complete)) < 2L
+      ) {
+        return(list(method = method, cor = NA_real_, p = NA_real_, n = n))
+      }
+      
+      test <- tryCatch(
+        cor.test(
+          x_complete,
+          y_complete,
+          method = method,
+          exact = if (method == "spearman") FALSE else NULL
+        ),
+        error = function(e) NULL
+      )
+      
+      if (is.null(test)) {
+        return(list(method = method, cor = NA_real_, p = NA_real_, n = n))
+      }
+      
+      list(
+        method = method,
+        cor = unname(as.numeric(test$estimate)),
+        p = as.numeric(test$p.value),
+        n = n
+      )
     }
     
     # point-biserial: correlate continuous with binary (factor with 2 levels)
@@ -463,6 +581,39 @@
       list(r = as.numeric(ct$estimate), p = as.numeric(ct$p.value), n = n)
     }
     
+    
+    # Fisher z transformation: used for Pearson r and point-biserial r
+    ci_fisher <- function(r, n, conf = .95) {
+      if (is.na(r) || is.na(n) || n < 4 || abs(r) >= 1) return(c(NA_real_, NA_real_))
+      z    <- atanh(r)
+      se   <- 1 / sqrt(n - 3)
+      crit <- qnorm(1 - (1 - conf) / 2)
+      tanh(c(z - crit * se, z + crit * se))
+    }
+    
+    # Bonett & Wright (2000) standard error for Spearman's rho.
+    ci_spearman <- function(rho, n, conf = .95) {
+      if (is.na(rho) || is.na(n) || n < 5 || abs(rho) >= 1) return(c(NA_real_, NA_real_))
+      z    <- atanh(rho)
+      se   <- sqrt((1 + rho^2 / 2) / (n - 3))
+      crit <- qnorm(1 - (1 - conf) / 2)
+      tanh(c(z - crit * se, z + crit * se))
+    }
+    
+    # Noncentral F confidence interval for eta-squared.
+    ci_eta2 <- function(x, g, conf = .90) {
+      ok <- complete.cases(x, g)
+      x  <- x[ok]
+      g  <- droplevels(as.factor(g[ok]))
+      if (nlevels(g) < 2 || length(x) < 3) return(c(NA_real_, NA_real_))
+      
+      es <- effectsize::eta_squared(stats::aov(x ~ g), ci = conf,
+                                    alternative = "two.sided", verbose = FALSE)
+      
+      lo <- es$CI_low[1]
+      hi <- es$CI_high[1]
+      c(if (is.na(lo)) 0 else lo, if (is.na(hi)) 0 else hi)
+    }
     
     
     #  functions to check variable levels
@@ -506,87 +657,225 @@
       }
     }
     
-    
-# Make split plots for correlations
-    make_split_raincloud <- function(data, DVs, group_var,
-                                     violin_alpha = 0.5,
-                                     box_width = 0.08,
-                                     box_fill = "white",
-                                     palette = "Dark2",
-                                     show_legend = TRUE,
-                                     plot_title = NULL) {
-      group_var <- ensym(group_var)
+
+    # Make split plots for correlations
+
+    make_split_raincloud <- function(
+    data, DVs, group_var,
+    violin_alpha = 0.5,
+    box_width = 0.08,
+    box_fill = "white",
+    show_legend = TRUE,
+    plot_title = NULL,
+    legend_title = NULL,
+    y_limits = c(1, 5),
+    group_colors = c("#7FB685", "#AF97A2")
+    ) {
       
-      df <- data %>%
-        select(all_of(DVs), {{group_var}}) %>%
-        filter(!is.na({{group_var}})) %>%
-        mutate({{group_var}} := factor({{group_var}})) %>%
-        pivot_longer(
-          cols = all_of(DVs),
-          names_to = "DV",
-          values_to = "value"
-        ) %>%
-        mutate(
-          DV = recode(DV,
-                      "EBMH_attitude_mean" = "Attitude",
-                      "EBMH_openness"      = "Openness",
-                      "EBMH_use"           = "Use")
+      group_var  <- rlang::ensym(group_var)
+      group_name <- rlang::as_name(group_var)
+      if (is.null(legend_title)) legend_title <- group_name
+      
+      
+      # Check requested columns
+      missing_cols <- setdiff(
+        c(DVs, group_name),
+        names(data)
+      )
+      
+      if (length(missing_cols) > 0) {
+        stop(
+          "Columns not found in `data`: ",
+          paste(missing_cols, collapse = ", ")
         )
-      
-      groups <- levels(df[[rlang::as_name(group_var)]])
-      if(length(groups) != 2){
-        stop("This function currently supports exactly 2 levels in the grouping variable.")
       }
       
-      d1 <- df %>% filter({{group_var}} == groups[1])
-      d2 <- df %>% filter({{group_var}} == groups[2])
       
-      ggplot() +
-        geom_half_violin(
-          data = d1,
-          aes(x = DV, y = value, fill = !!group_var),
-          side = "l", trim = FALSE, alpha = violin_alpha
+      # Reshape data
+      df <- data %>%
+        dplyr::select(
+          dplyr::all_of(DVs),
+          !!group_var
+        ) %>%
+        dplyr::filter(
+          !is.na(!!group_var)
+        ) %>%
+        dplyr::mutate(
+          !!group_var := factor(!!group_var)
+        ) %>%
+        tidyr::pivot_longer(
+          cols = dplyr::all_of(DVs),
+          names_to = "DV",
+          values_to = "value",
+          values_drop_na = TRUE
+        ) %>%
+        dplyr::mutate(
+          DV = dplyr::recode(
+            DV,
+            "EBMH_attitude_mean" = "Attitude",
+            "EBMH_openness" = "Openness",
+            "EBMH_use" = "Use"
+          )
+        )
+      
+      
+      # Identify grouping levels
+      groups <- levels(
+        droplevels(df[[group_name]])
+      )
+      
+      if (length(groups) != 2) {
+        stop(
+          "`", group_name,
+          "` must contain exactly two observed levels. Found: ",
+          paste(groups, collapse = ", ")
+        )
+      }
+      
+      
+      # Automatically assign colors to the two groups
+      colors_named <- stats::setNames(
+        group_colors,
+        groups
+      )
+      
+      
+      # First group
+      d1 <- df %>%
+        dplyr::filter(
+          .data[[group_name]] == groups[1]
+        ) %>%
+        dplyr::group_by(DV) %>%
+        dplyr::filter(
+          dplyr::n() >= 2,
+          dplyr::n_distinct(value) >= 2
+        ) %>%
+        dplyr::ungroup()
+      
+      
+      # Second group
+      d2 <- df %>%
+        dplyr::filter(
+          .data[[group_name]] == groups[2]
+        ) %>%
+        dplyr::group_by(DV) %>%
+        dplyr::filter(
+          dplyr::n() >= 2,
+          dplyr::n_distinct(value) >= 2
+        ) %>%
+        dplyr::ungroup()
+      
+      
+      # Build plot
+      p <- ggplot2::ggplot()
+      
+      
+      # Left half violin: group 1
+      if (nrow(d1) > 0) {
+        
+        p <- p +
+          gghalves::geom_half_violin(
+            data = d1,
+            ggplot2::aes(
+              x = DV,
+              y = value,
+              fill = .data[[group_name]]
+            ),
+            side = "l",
+            trim = TRUE,
+            alpha = violin_alpha,
+            na.rm = TRUE
+          )
+      }
+      
+      
+      # Right half violin: group 2
+      if (nrow(d2) > 0) {
+        
+        p <- p +
+          gghalves::geom_half_violin(
+            data = d2,
+            ggplot2::aes(
+              x = DV,
+              y = value,
+              fill = .data[[group_name]]
+            ),
+            side = "r",
+            trim = TRUE,
+            alpha = violin_alpha,
+            na.rm = TRUE
+          )
+      }
+      
+      
+      # Group 1 boxplot
+      if (nrow(d1) > 0) {
+        
+        p <- p +
+          ggplot2::geom_boxplot(
+            data = d1,
+            ggplot2::aes(
+              x = DV,
+              y = value
+            ),
+            width = box_width,
+            fill = box_fill,
+            color = "black",
+            alpha = 0.9,
+            outlier.shape = NA,
+            position = ggplot2::position_nudge(x = -0.1),
+            na.rm = TRUE
+          )
+      }
+      
+      
+      # Group 2 boxplot
+      if (nrow(d2) > 0) {
+        
+        p <- p +
+          ggplot2::geom_boxplot(
+            data = d2,
+            ggplot2::aes(
+              x = DV,
+              y = value
+            ),
+            width = box_width,
+            fill = box_fill,
+            color = "black",
+            alpha = 0.9,
+            outlier.shape = NA,
+            position = ggplot2::position_nudge(x = 0.1),
+            na.rm = TRUE
+          )
+      }
+      
+      
+      # Colors, labels, and theme
+      p <- p +
+        ggplot2::scale_fill_manual(
+          values = colors_named,
+          name = group_name,
+          drop = FALSE
         ) +
-        geom_half_violin(
-          data = d2,
-          aes(x = DV, y = value, fill = !!group_var),
-          side = "r", trim = FALSE, alpha = violin_alpha
-        ) +
-        geom_boxplot(
-          data = d1,
-          aes(x = DV, y = value),
-          width = box_width,
-          fill = box_fill,
-          color = "black",
-          alpha = 0.9,
-          outlier.shape = NA,
-          position = position_nudge(x = -0.1)
-        ) +
-        geom_boxplot(
-          data = d2,
-          aes(x = DV, y = value),
-          width = box_width,
-          fill = box_fill,
-          color = "black",
-          alpha = 0.9,
-          outlier.shape = NA,
-          position = position_nudge(x = 0.1)
-        ) +
-        scale_fill_brewer(palette = palette, name = NULL)+
-      labs(
-          title = if (!is.null(plot_title)) plot_title else paste(rlang::as_name(group_var)),
+        ggplot2::labs(
+          title = if (!is.null(plot_title)) {
+            plot_title
+          } else {
+            group_name
+          },
           x = NULL,
           y = "Score"
         ) +
-        coord_cartesian(clip = "off") +
-        theme_classic() +
-        theme(
-          axis.text.x = element_text(size = 12),
-          strip.text = element_text(face = "bold", size = 14),
-          strip.background = element_blank(),
+        ggplot2::coord_cartesian(
+          clip = "off"
+        ) +
+        ggplot2::theme_classic() +
+        ggplot2::theme(
+          axis.text.x = ggplot2::element_text(size = 12),
           legend.position = if (show_legend) "right" else "none",
-          legend.title = element_text(size = 13),
-          legend.text = element_text(size = 12)
+          legend.title = ggplot2::element_text(size = 13),
+          legend.text = ggplot2::element_text(size = 12)
         )
+      
+      return(p)
     }
-    

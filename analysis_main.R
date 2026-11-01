@@ -3,66 +3,40 @@
 # Clinician Survey Project - Analysis Script Main -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 21.11.2025
+# Date last updated: 19.08.2026
 # ===========================================================================
 
-### 0. To do list ---------------------------------------------------------------
-
-# After each session 
-# - update the date of what you update.default
-# - push changes
-
-
-# Open: 
-
-# - fix NA in core table
-# - fix descriptive graphs - maybe extra script for plots?? 
-# - check ###
-# - clean 2. Data cleaning 
-# - clean 3. Sample Characteristics
-# - clean 4. Scale Creation and Item-Level Statistics 
-# - clean 4.1. Scale Creation
-# - clean 4.2. Item-Level Statistics
-# - clean 5. Descriptives 
-# - clean 6. Correlational analysis 
-# - clean 7. Wave2-specific analysis
-# - clean 8. Open-ended responses
-# - clean 9. Clean Environment 
-# - clean functions
-# - clean maps
-# - check warnings 
-# - check where you can remove stuff from dataset, sometimes extra columns are added 
-# - Should plots be shown when created in the end?? 
-
-
-# Done: 
-# - check length therapy variable.names
-# - check slider variables 
-# - remove stuff from environment after each script 
-# - draft correlations
-# - draft correlations visuals
-# - draft wave 2 analysis 
-# - correlation table needs to be sorted by DV 
-# - extract open-ended questions
-  
+rm(list = ls())
 
 ### 1. Setup ---------------------------------------------------------------
 
-## 1.1 Load Required Packages
+## 1.1 Install and Load Required Packages
 
-### in the end add a line if package is not there, install it
-library(tidyverse)
-library(psych)
-library(ggplot2)
-library(readxl)
-library(dplyr)
-library(gghalves)
-library(rlang)
-library(gridExtra)
-library(stringr)
-library(reshape2)
-library(ggrain)
+packages <- c(
+  "tidyverse",
+  "psych",
+  "ggplot2",
+  "readxl",
+  "dplyr",
+  "gghalves",
+  "rlang",
+  "gridExtra",
+  "stringr",
+  "reshape2",
+  "ggrain",
+  "writexl", 
+  "purrr", 
+  "tibble"
+)
 
+# Install packages that are not yet installed
+installed <- packages %in% rownames(installed.packages())
+if (any(!installed)) {
+  install.packages(packages[!installed])
+}
+
+# Load all packages
+invisible(lapply(packages, library, character.only = TRUE))
 
 ## 1.2 Set working directory
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -93,7 +67,7 @@ attach(.func_env, pos = 2)
 # Load cleaned data
 source("data_cleaning.R")
 
-names### 3. Sample Characteristics ---------------------------------------------------------------
+### 3. Sample Characteristics ---------------------------------------------------------------
 source("sample_characteristics.R")
 
 ### 4. Scale Creation and Item-Level Statistics ---------------------------------------------------------------
@@ -116,10 +90,9 @@ source("wave2_specific_analysis.R")
 ### 8. Open-ended responses ---------------------------------------------------------------
  source("open-ended_responses.R")
 
-
-
 ### 9. Clean Environment ---------------------------------------------------------------
 # Remove local environment 
   detach(.func_env)
   rm(.func_env)
+  
   

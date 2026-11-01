@@ -2,7 +2,7 @@
 # Clinician Survey Project - Occasions Discussion Evidence -
 # Author: Nina Schwarzbach
 # Start date: 31.09.2025
-# Date last updated: 03.11.2025
+# Date last updated: 13.08.2026
 # ===========================================================================
 
 
@@ -90,17 +90,15 @@ stack_df <- stack_df %>%
   )
 
 # Order factors
-likert_levels <- c("Rather not updated", "Neutral", "Rather updated", "No response")
-stack_df$Updatedness <- factor(stack_df$Updatedness, levels = likert_levels, ordered = TRUE)
-stack_df$Occasion <- factor(stack_df$Occasion, 
-                            levels = c("Conferences", "Workplace", "Supervision", "Private", "Other"))
+likert_levels <- c("No response", "Rather not updated", "Neutral", "Rather updated")
+stack_df$Updatedness <- factor(stack_df$Updatedness, levels = rev(likert_levels), ordered = TRUE)
 
 # --- Colors: blue gradient + grey
 pal_colors <- c(
-  "Rather not updated" = "#377eb8",
-  "Neutral" = "#6baed6",
-  "Rather updated" = "#bdd7e7",
-  "No response" = "#bdbdbd"
+  "Rather not updated" = "#AF97A2",
+  "Neutral" = "#4A6C6F",
+  "Rather updated" = "#7FB685",
+  "No response" = "#708090"
 )
 
 # --- Plot
@@ -111,7 +109,7 @@ gg <- ggplot(stack_df, aes(x = Occasion, y = Count, fill = Updatedness)) +
             color = "black", size = 3) +
   coord_flip() +
   labs(
-    title = "Occasions to Discuss Evidence and Feeling Updated",
+    title = "Feeling Updated About EBMH by Context",
     x = "",
     y = "Number of respondents (selected occasion)",
     fill = "Feeling updated"
@@ -129,14 +127,8 @@ gg <- gg + expand_limits(y = max(totals$ypos) * 1.05)
 
 print(gg)
 
-ggsave(
-  "plots/occasions_updated.png",
-  gg,
-  width = 14,  
-  height = 3.5,   
-  dpi = 300
-)
 
+ggsave("plots/occasions_updated.png", gg, width = 11, height = 5, dpi = 300)
 
 
 ## 6.3 EBMH endorsement  ---------------------------------------------------------------
@@ -207,20 +199,22 @@ stack_df <- stack_df %>%
   )
 
 # Order factors
-likert_levels <- c("Not at all endorsed", "Rather not endorsed", "Neutral", 
-                   "Rather endorsed", "Very endorsed", "No response")
-stack_df$Endorsement <- factor(stack_df$Endorsement, levels = likert_levels, ordered = TRUE)
+llikert_levels <- c("No response", "Not at all endorsed", "Rather not endorsed",
+                    "Neutral", "Rather endorsed", "Very endorsed")
+stack_df$Endorsement <- factor(stack_df$Endorsement, levels = rev(likert_levels2), ordered = TRUE)
 stack_df$Occasion <- factor(stack_df$Occasion,
                             levels = c("Conferences", "Workplace", "Supervision", "Private", "Other"))
 
 # Colors
+
+
 pal_colors <- c(
-  "Not at all endorsed" = "#08306b",
-  "Rather not endorsed" = "#2171b5",
-  "Neutral" = "#6baed6",
-  "Rather endorsed" = "#bdd7e7",
-  "Very endorsed" = "#deebf7",
-  "No response" = "#bdbdbd"
+  "Not at all endorsed" = "#AF97A2",
+  "Rather not endorsed" = "#C1AEB7",
+  "Neutral" = "#4A6C6F",
+  "Rather endorsed" = "#7FB685",
+  "Very endorsed" = "#437549",
+  "No response" = "#708090"
 )
 
 # Plot
@@ -251,13 +245,7 @@ gg2 <- gg2 +
 
 print(gg2)
 
-ggsave(
-  "plots/endorsed.png",
-  gg2,
-  width = 14,  
-  height = 3.5,   
-  dpi = 300
-)
+ggsave("plots/endorsed.png", gg2, width = 11, height = 5, dpi = 300)
 
 
 ## 6.4 Use of evidence, research resources,  and treatment manuals   ---------------------------------------------------------------
@@ -265,15 +253,24 @@ ggsave(
 # use of evidence
 tab_evidence <- table(data_wave2_only$UseEvidence_YesNo); tab_evidence
 
-# Research resources
-tab_resource <- table(unlist(strsplit(data_wave2_only$ResearchResources, ","))); tab_resource
-# Show counts and percentages together
-cbind(Count = tab_resource,
-      Percent = round(100 * prop.table(tab_resource), 1))
 
+n_evidence_users <- sum(data_wave2_only$UseEvidence_YesNo == "Yes", na.rm = TRUE)
+n_evidence_users 
+
+resource_items <- strsplit(data_wave2_only$ResearchResources, ",")
+resource_items <- lapply(resource_items, function(x) {
+  x <- trimws(x)
+  x[x != ""]
+})
+tab_resource <- table(unlist(resource_items))
+
+cbind(Count   = tab_resource,
+      Percent = round(100 * tab_resource / n_evidence_users, 1))
 # using treatment manuals and frequency of it
 tab_manuals <- table(data_wave2_only$TreatmentManuals); tab_manuals
 desc_manuals <- describe(data_wave2_only$TreatmentManuals_Freq); desc_manuals
+
+
 
 # Clean environment ---------------------------------------------------------------
 rm(
@@ -285,3 +282,4 @@ rm(
      "pal_colors", ls(pattern = "^vars_"), ls(pattern = "^tab")
   )
 )
+
