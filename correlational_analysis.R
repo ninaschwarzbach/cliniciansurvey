@@ -460,14 +460,9 @@ plot_gender <- make_split_raincloud(
 )
 
 # Degree
-  plot_degree <- make_split_raincloud(
-    data, DVs, Degree_plot,
-    plot_title   = "Degree",
-    legend_title = "Degree"
-  )
-
 data$Degree_plot <- factor(
-  data$Degree_plot,
+  ifelse(is.na(data$Degree), NA,
+         ifelse(grepl("PhD", data$Degree), "PhD Degree", "Master's Degree")),
   levels = c("Master's Degree", "PhD Degree")
 )
 
@@ -484,23 +479,44 @@ combined_cat_cor <- grid.arrange(plot_country, plot_background,
 ggsave("plots/combined_cat_cor.png", combined_cat_cor,
        width = 11, height = 9, dpi = 300)
 
-# Work setting plot
-stack_df <- stack_df %>%
-  mutate(WorkSetting = forcats::fct_reorder(WorkSetting, value, .fun = median, na.rm = TRUE))
+# Work setting plot (Figure 4)
+ws_data <- data %>%
+  filter(!is.na(WorkSetting), !grepl("^Other", WorkSetting)) %>%
+  mutate(WorkSetting = sub(" \\(e\\.g\\..*\\)$", "", as.character(WorkSetting)))
 
-gg <- ggplot(stack_df, aes(x = WorkSetting, y = value, fill = WorkSetting)) +
-  geom_boxplot(width = 0.5, color = "black", outlier.shape = NA, alpha = 0.8) +
-  geom_jitter(width = 0.15, alpha = 0.3, size = 1, na.rm = TRUE) +
-  stat_summary(fun = mean, geom = "point", shape = 23, size = 2,
-               fill = "white", na.rm = TRUE) +
-  facet_wrap(~DV, ncol = 1) +
+ws_n <- ws_data %>%
+  count(WorkSetting, name = "n_setting")
+
+ws_long <- ws_data %>%
+  select(WorkSetting, all_of(DVs)) %>%
+  pivot_longer(all_of(DVs), names_to = "DV", values_to = "value",
+               values_drop_na = TRUE) %>%
+  left_join(ws_n, by = "WorkSetting") %>%
+  mutate(
+    DV      = factor(dv_map[DV], levels = c("EBMH attitude", "EBMH openness", "EBMH use")),
+    Setting = factor(WorkSetting),                                  # for the colours
+    WorkSetting = paste0(WorkSetting, " (n = ", n_setting, ")"),    # axis label with n
+    WorkSetting = forcats::fct_reorder(WorkSetting, value, .fun = median)
+  )
+
+# One colour per work setting (assigned in alphabetical order of the settings)
+pal_colors_ws <- c("#5B8DB8", "#735965", "#C1AEB7", "#4A6C6F",
+                   "#AF97A2", "#7FB685", "#437549", "#708090")
+
+gg <- ggplot(ws_long, aes(x = WorkSetting, y = value, fill = Setting)) +
+  geom_boxplot(width = 0.75, colour = "black", alpha = 0.85,
+               outlier.shape = NA) +
+  geom_jitter(width = 0.2, height = 0.05, alpha = 0.3, size = 1) +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 2.5,
+               fill = "white") +
+  facet_wrap(~ DV, ncol = 1) +
   coord_flip(ylim = c(1, 5)) +
   scale_fill_manual(values = pal_colors_ws) +
-  labs(title = "EBMH Scores by Work Setting", x = NULL, y = "Score") +
+  labs(x = NULL, y = "Score") +
   theme_plots() +
   theme(legend.position = "none")
 
-save_plot(gg, "EBMH_WorkSetting", width = 10, height = 9)
+save_plot(gg, "EBMH_WorkSetting", width = 10, height = 11)
 
 # Clean environment ---------------------------------------------------------------
 rm(corr_vis, cor_plot, res, results, results_df, 

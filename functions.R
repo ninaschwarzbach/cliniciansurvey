@@ -328,7 +328,8 @@
         if (!dir.exists(folder)) dir.create(folder, recursive = TRUE)
         ggsave(
           filename = file.path(folder, paste0(filename, ".png")),
-          plot = plot, width = width, height = height, dpi = dpi
+          plot = plot, width = width, height = height, dpi = dpi, 
+          bg = "white"
         )
         message("Plot saved to: ", file.path(folder, paste0(filename, ".png")))
         invisible(plot)
@@ -417,7 +418,7 @@
         if (!is.null(y_limits)) p <- p + coord_cartesian(ylim = y_limits)
         p
       }
-    
+      
       # Stacked percent bars for single Likert items
       likert_panel <- function(data, vars, labels = NULL, ncol = 2,
                                response_labels = c("Strongly disagree", "Disagree",
@@ -441,16 +442,33 @@
           dplyr::count(Variable, Wave, Response) %>%
           dplyr::group_by(Variable, Wave) %>%
           dplyr::mutate(pct = 100 * n / sum(n), n_group = sum(n)) %>%
-          dplyr::ungroup() %>%
-          dplyr::mutate(WaveLab = paste0(Wave, " (n=", n_group, ")"))
+          dplyr::ungroup()
+        
+        # Panel titles with n per wave, e.g. "EBMH Use\n(Wave 1: n = 129; Wave 2: n = 93)"
+        panel_labs <- d %>%
+          dplyr::distinct(Variable, Wave, n_group) %>%
+          dplyr::arrange(Variable, Wave) %>%
+          dplyr::group_by(Variable) %>%
+          dplyr::summarise(
+            Panel = paste0(Variable[1], "\n(",
+                           paste0(Wave, ": n = ", n_group, collapse = "; "), ")"),
+            .groups = "drop"
+          )
+        
+        d <- d %>%
+          dplyr::left_join(panel_labs, by = "Variable") %>%
+          dplyr::mutate(
+            Panel = factor(Panel, levels = panel_labs$Panel),
+            Wave  = factor(Wave, levels = rev(sort(unique(as.character(Wave)))))  # Wave 1 on top
+          )
         
         fills <- stats::setNames(likert_colors, response_labels)
         
-        ggplot(d, aes(x = WaveLab, y = pct, fill = Response)) +
+        ggplot(d, aes(x = Wave, y = pct, fill = Response)) +
           geom_col(width = 0.65, colour = "white") +
           geom_text(aes(label = ifelse(pct >= min_pct_label, sprintf("%.0f%%", pct), "")),
                     position = position_stack(vjust = 0.5), size = 3, colour = "black") +
-          facet_wrap(~ Variable, ncol = ncol) +
+          facet_wrap(~ Panel, ncol = ncol) +
           coord_flip() +
           scale_fill_manual(values = fills, drop = FALSE) +
           scale_y_continuous(expand = expansion(mult = c(0, 0.02))) +
@@ -459,6 +477,7 @@
           theme(legend.position = "bottom",
                 panel.grid.major.y = element_blank())
       }
+      
 # Correlation functions 
     # Cramer's V 
     cramers_v <- function(x, y) {

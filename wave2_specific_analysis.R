@@ -199,9 +199,9 @@ stack_df <- stack_df %>%
   )
 
 # Order factors
-llikert_levels <- c("No response", "Not at all endorsed", "Rather not endorsed",
-                    "Neutral", "Rather endorsed", "Very endorsed")
-stack_df$Endorsement <- factor(stack_df$Endorsement, levels = rev(likert_levels2), ordered = TRUE)
+levels_endorsed <- c("No response", "Not at all endorsed", "Rather not endorsed",
+                     "Neutral", "Rather endorsed", "Very endorsed")
+stack_df$Endorsement <- factor(stack_df$Endorsement, levels = rev(levels_endorsed), ordered = TRUE)
 stack_df$Occasion <- factor(stack_df$Occasion,
                             levels = c("Conferences", "Workplace", "Supervision", "Private", "Other"))
 

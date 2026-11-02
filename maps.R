@@ -36,18 +36,18 @@ group_colors_2 <- c("#7FB685", "#AF97A2")
   labels_means <- c(
     EBMH_skills_mean          = "EBMH Skills",
     perception_gap_mean       = "Perceived Research–Practice Gap",
-    EBMH_attitude_mean        = "Attitude Toward EBMH",
-    workplace_influences_mean = "Workplace Influences",
-    employer_influences_mean  = "Employer Influences",
+    EBMH_attitude_mean        = "EBMH Attitude",
+    workplace_influences_mean = "Colleague Support",
+    employer_influences_mean  = "Employer Support",
     research_experience_mean  = "Research Experience",
-    EBMH_PsychDisorders_mean  = "Importance of EBMH for Psychotic Disorders"
+    EBMH_PsychDisorders_mean  = "Importance of EBMH for \nPsychotic Disorders"
   )
   
   # Single Likert items -> stacked bars
   labels_items <- c(
     EBMH_use                           = "EBMH Use",
     EBMH_openness                      = "EBMH Openness",
-    EBMH_importance_clinical_expertise = "Importance: Clinical Expertise",
+    EBMH_importance_clinical_expertise = "Clinical Expertise Valued Over Research",
     FamiliarityEBMH                    = "Familiarity with EBMH"
   )
   
