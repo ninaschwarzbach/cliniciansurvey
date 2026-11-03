@@ -322,7 +322,7 @@ reverse_likert_text <- function(x) {
     
   # Save plots
       save_plot <- function(plot, filename, folder = "plots",
-                            width = 8, height = 6, dpi = 300) {
+                            width = 8, height = 6, dpi = 600) {
         if (!dir.exists(folder)) dir.create(folder, recursive = TRUE)
         ggsave(
           filename = file.path(folder, paste0(filename, ".png")),

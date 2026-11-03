@@ -2,11 +2,22 @@
 # Clinician Survey Project - Open-ended Responses -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 19.08.2026
+# Date last updated: 03.11.2026
+#
+# Prepares the open-ended responses of both waves for the qualitative
+# analysis: availability per wave, response counts and lengths (Appendix C)
+# and a coding sheet.
+# Output: outputs/open_item_availability.csv, outputs/open_response_summary.csv,
+#         outputs/open_response_coding.csv, outputs/open_response_feedback.csv
 # ===========================================================================
 
-# Open-ended responses
 
+# ---------------------------------------------------------------------------
+# 1. Open-ended items
+# ---------------------------------------------------------------------------
+# role: substantive = analysed in the Results; admin = "other, namely" fields;
+# feedback = questionnaire feedback (Appendix C)
+# conditional: TRUE if the item was shown only after a specific answer
 
 item_registry <- tribble(
   ~item,                            ~role,          ~construct,                          ~conditional,
@@ -58,8 +69,8 @@ classify_response <- function(x) {
   )
 }
 
-# Crude language flag for the Methods sentence on translation.
-# HEURISTIC ONLY - verify in the coding sheet before reporting.
+# Rough language flag based on frequent words (German, Dutch, English);
+# checked by hand in the coding sheet.
 guess_language <- function(x) {
   xl <- str_to_lower(paste0(" ", x, " "))
   de <- str_count(xl, "\\b(ich|nicht|und|der|die|das|mit|eine|f\u00fcr|von|zu|auf|bei|mehr|zeit|keine)\\b") +
@@ -120,7 +131,7 @@ open_long <- bind_rows(
          response, status, n_words, language)
 
 # ---------------------------------------------------------------------------
-# 5. Summary table for the appendix
+# 5. Summary table (Appendix C)
 # ---------------------------------------------------------------------------
 
 wave_n <- tibble(
@@ -162,7 +173,7 @@ print(as.data.frame(open_summary), row.names = FALSE)
 write.csv(open_summary, "outputs/open_response_summary.csv", row.names = FALSE)
 
 # ---------------------------------------------------------------------------
-# 6. Coding sheet (audit trail)
+# 6. Coding sheet
 # ---------------------------------------------------------------------------
 
 coding_sheet <- open_long %>%
@@ -178,7 +189,7 @@ coding_sheet <- open_long %>%
 write.csv(coding_sheet, "outputs/open_response_coding.csv", row.names = FALSE)
 cat("\nCoding sheet rows to code:", nrow(coding_sheet), "\n")
 
-# Questionnaire feedback kept separate - Appendix C, not a study finding.
+# Questionnaire feedback is kept separate (Appendix C)
 feedback_sheet <- open_long %>%
   filter(role == "feedback", status == "informative") %>%
   arrange(wave, item, row_id)
@@ -186,8 +197,8 @@ feedback_sheet <- open_long %>%
 write.csv(feedback_sheet, "outputs/open_response_feedback.csv", row.names = FALSE)
 
 # ---------------------------------------------------------------------------
-# 8. Optional inspection: print informative responses per item
-#    Replaces the earlier block of bare unlist() calls.
+# 7. Optional: print all informative responses of one item, e.g.
+#    show_item("MainObstacleEBMH_TEXT", "Wave 2")
 # ---------------------------------------------------------------------------
 
 show_item <- function(item_name, wave_label = NULL) {
@@ -202,13 +213,11 @@ show_item <- function(item_name, wave_label = NULL) {
 }
 
 
-
 # ---------------------------------------------------------------------------
-# 9. Clean environment
+# 8. Clean environment (show_item() is kept for inspecting responses)
 # ---------------------------------------------------------------------------
-
-rm(list = c("placeholder_pat", "crossref_pat", "wave_n", "occ_tab",
-            "prof_check", "orient_n", "availability", "feedback_sheet", 
-            "item_registry", "open_long", "open-summary", "resource_items", 
-            "coding_sheet"))
-
+rm(list = intersect(c(
+  "item_registry", "placeholder_pat", "crossref_pat", "classify_response",
+  "guess_language", "availability", "extract_long", "open_long", "wave_n",
+  "open_summary", "coding_sheet", "feedback_sheet"
+), ls()))

@@ -3,63 +3,53 @@
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
 # Date last updated: 03.11.2026
+#
+# Associations of therapist and contextual characteristics with EBMH
+# attitude, openness and use (Table F1), and Figures 2, 3, 4 and F1.
+# Output: outputs/cor_table_by_predictor.xlsx, plots/Figure2..., Figure3...,
+#         Figure4..., FigureF1...
 # ===========================================================================
 
 
-### 5. Descriptives 
+### 1. Variables ----------------------------------------------------------------
+# Outcomes
+DVs <- c("EBMH_use", "EBMH_attitude_mean", "EBMH_openness")
 
-## 5.1 Defining important  variables ---------------------------------------------------------------
-
-# "Dependent" variables
-DVs <- c("EBMH_use", "EBMH_attitude_mean", "EBMH_openness")  
-
-# Continuous/interval-like predictors
-continuous_preds <- c("EBMH_skills_mean", "perception_gap_mean", "workplace_influences_mean",
-                      "employer_influences_mean", "research_experience_mean",
-                      "EBMH_PsychDisorders_mean",
-                      "Age", "YearsExperience", 
-                     "EBMH_importance_clinical_expertise", 
+# Continuous predictors (scale means, 5-point single items, VAS, age, years)
+continuous_preds <- c("EBMH_skills_mean", "perception_gap_mean",
+                      "workplace_influences_mean", "employer_influences_mean",
+                      "research_experience_mean", "EBMH_PsychDisorders_mean",
+                      "Age", "YearsExperience",
+                      "EBMH_importance_clinical_expertise",
                       grep("^SchoolSlider", names(data), value = TRUE))
 
-# Ordinal predictors
+# Ordinal predictors (Spearman)
 ordinal_preds <- c("FamiliarityEBMH", "UniversityEducation")
 
-# Binary predictors
+# Dichotomous predictors (point-biserial)
 binary_preds <- c("Country", "Wave")
 
-# Nominal predictors
-nominal_preds <- c("GenderIdentity", "Degree", "WorkSetting", "LengthTrajectory", "ProfessionalBackground")  
+# Categorical predictors (eta squared)
+nominal_preds <- c("GenderIdentity", "Degree", "WorkSetting",
+                   "LengthTrajectory", "ProfessionalBackground")
 
-# Combine all variables
 all_vars <- c(DVs, continuous_preds, ordinal_preds, binary_preds, nominal_preds)
 
-## 5.2 Fixing classes for variables ---------------------------------------------------------------
+# Variable classes
+for (var in ordinal_preds) data[[var]] <- as.ordered(data[[var]])
+for (var in c(binary_preds, nominal_preds)) data[[var]] <- as.factor(data[[var]])
 
-for (var in ordinal_preds) {
-  data[[var]] <- as.ordered(data[[var]])  # Use as.ordered for ordinal data
-}
 
-for (var in binary_preds) {
-  data[[var]] <- as.factor(data[[var]])
-}
-
-for (var in nominal_preds) {
-  data[[var]] <- as.factor(data[[var]])
-}
-
-## 5.3 Correlations ------------------------------------------------------------
-
+### 2. Associations with the three outcomes -----------------------------------
+# Pearson's r between continuous variables; Spearman's rho if one variable is
+# ordinal (decided in choose_corr()); point-biserial r for dichotomous and
+# eta squared for categorical predictors.
+corr_vars <- c(DVs, continuous_preds, ordinal_preds)
 
 results <- list()
 rowi <- 1
 
-# Variables that should be analysed using Spearman correlations
-spearman_vars <- c(DVs, continuous_preds, ordinal_preds)
-
 for (dv in DVs) {
-  
-  if (!dv %in% names(data)) next
-  
   for (pred in setdiff(all_vars, dv)) {
     
     if (!pred %in% names(data)) next
@@ -67,14 +57,10 @@ for (dv in DVs) {
     x <- data[[dv]]
     y <- data[[pred]]
     
-    # Spearman or Pearson correlation (choose_corr decides)
-    if (pred %in% spearman_vars) {
-      
-      res <- choose_corr(x, y)
-      
+    if (pred %in% corr_vars) {
+      res    <- choose_corr(x, y)
       method <- res$method
       stat   <- res$cor
-      pval   <- res$p
       nobs   <- res$n
       ci     <- if (grepl("spearman", method, ignore.case = TRUE)) {
         ci_spearman(stat, nobs)
@@ -82,43 +68,22 @@ for (dv in DVs) {
         ci_fisher(stat, nobs)
       }
       conf   <- 0.95
-    }
-    
-    # Point-biserial correlation
-    else if (pred %in% binary_preds) {
       
-      res <- point_biserial(x, y)
-      
+    } else if (pred %in% binary_preds) {
+      res    <- point_biserial(x, y)
       method <- "point-biserial"
       stat   <- res$r
-      pval   <- res$p
       nobs   <- res$n
       ci     <- ci_fisher(stat, nobs)
       conf   <- 0.95
-    }
-    
-    # Eta-squared
-    else if (pred %in% nominal_preds) {
       
-      res <- eta_squared(x, y)
-      
+    } else if (pred %in% nominal_preds) {
+      res    <- eta_squared(x, y)
       method <- "eta-squared"
       stat   <- res$eta2
-      pval   <- res$p
       nobs   <- res$n
-      ci     <- ci_eta2(x, y)
+      ci     <- ci_eta2(x, y)   # 90% CI, see Method
       conf   <- 0.90
-    }
-    
-    # Unsupported variable type
-    else {
-      
-      method <- "unsupported"
-      stat   <- NA_real_
-      pval   <- NA_real_
-      nobs   <- sum(complete.cases(x, y))
-      ci     <- c(NA_real_, NA_real_)
-      conf   <- NA_real_
     }
     
     results[[rowi]] <- data.frame(
@@ -129,19 +94,16 @@ for (dv in DVs) {
       CI_low    = as.numeric(ci[1]),
       CI_high   = as.numeric(ci[2]),
       CI_level  = as.numeric(conf),
-      P.value   = as.numeric(pval),
       N         = as.integer(nobs),
       stringsAsFactors = FALSE
     )
-    
     rowi <- rowi + 1
   }
 }
 
-# Combine results
 results_df <- do.call(rbind, results)
 
-# Add effect-size categories before formatting
+# Effect-size labels (based on values rounded to two decimals)
 results_df$EffectSize <- mapply(
   categorize_effect,
   stat   = results_df$Statistic,
@@ -149,123 +111,41 @@ results_df$EffectSize <- mapply(
   USE.NAMES = FALSE
 )
 
-# Add wave information
-results_df <- merge(
-  results_df,
-  wave_info,
-  by.x  = "Predictor",
-  by.y  = "Variable",
-  all.x = TRUE,
-  sort  = FALSE
-)
+# Which data collection(s) each predictor comes from
+results_df <- merge(results_df, wave_info,
+                    by.x = "Predictor", by.y = "Variable",
+                    all.x = TRUE, sort = FALSE)
 
-# Select and order columns
-results_df <- results_df[
-  c(
-    "Predictor",
-    "DV",
-    "Method",
-    "Statistic",
-    "CI_low",
-    "CI_high",
-    "CI_level",
-    "P.value",
-    "N",
-    "EffectSize",
-    "Wave"
-  )
-]
+results_df <- results_df[order(results_df$Predictor, results_df$DV),
+                         c("Predictor", "DV", "Method", "Statistic", "CI_low",
+                           "CI_high", "CI_level", "N", "EffectSize", "Wave")]
 
-# Sort by predictor and DV
-results_df <- results_df[
-  order(results_df$Predictor, results_df$DV),
-]
-
-# Keep this version numeric for plots and further analyses
-results_df$Statistic <- round(results_df$Statistic, 2)
-results_df$CI_low    <- round(results_df$CI_low, 2)
-results_df$CI_high   <- round(results_df$CI_high, 2)
+# "+ 0" turns -0.00 into 0.00
+results_df$Statistic <- round(results_df$Statistic, 2) + 0
+results_df$CI_low    <- round(results_df$CI_low, 2) + 0
+results_df$CI_high   <- round(results_df$CI_high, 2) + 0
 
 
-cor_table <- results_df
-
-# Format statistic with two decimal places
-cor_table$Statistic <- ifelse(
-  is.na(results_df$Statistic),
-  "",
-  sprintf("%.2f", results_df$Statistic)
-)
-
-# Format confidence interval as a single bracketed column
-cor_table$CI <- ifelse(
-  is.na(results_df$CI_low) | is.na(results_df$CI_high),
-  "",
-  sprintf("[%.2f, %.2f]", results_df$CI_low, results_df$CI_high)
-)
-
-# Format CI level as a percentage label
-cor_table$CI_level <- ifelse(
-  is.na(results_df$CI_level),
-  "",
-  sprintf("%d%%", as.integer(round(results_df$CI_level * 100)))
-)
-
-# Format p-values using the original, unrounded values
-cor_table$P.value <- ifelse(
-  is.na(results_df$P.value),
-  "",
-  ifelse(
-    results_df$P.value < .001,
-    "< .001",
-    sprintf("%.3f", results_df$P.value)
-  )
-)
-
-# Final column order for the exported table
-cor_table <- cor_table[
-  c(
-    "Predictor",
-    "DV",
-    "Method",
-    "Statistic",
-    "CI",
-    "CI_level",
-    "P.value",
-    "N",
-    "EffectSize",
-    "Wave"
-  )
-]
-
-# Save directly as Excel file
-writexl::write_xlsx(
-  cor_table,
-  "outputs/cor_table_by_predictor.xlsx"
-)
-
-
-## 5.4 Correlation forest plot -------------------------------------------------
-
-## ---- Select the associations to display -----------------------------------
-# Continuous/ordinal predictors only; outcome-on-outcome pairs are dropped
-# (reported in the text instead).
-
-cont_ord_vars <- unique(c(continuous_preds, ordinal_preds, DVs))
-
-corr_vis <- results_df %>%
-  filter(
-    DV %in% DVs,
-    Predictor %in% cont_ord_vars,
-    !Predictor %in% DVs,
-    grepl("pearson|spearman", Method, ignore.case = TRUE)
-  ) %>%
+### 3. Table F1 (Excel) -----------------------------------------------------------
+cor_table <- results_df %>%
   mutate(
-    Statistic = as.numeric(trimws(Statistic)),
-    CI_low    = as.numeric(CI_low),
-    CI_high   = as.numeric(CI_high)
-  )
+    Statistic = ifelse(is.na(Statistic), "", sprintf("%.2f", Statistic)),
+    CI        = ifelse(is.na(CI_low) | is.na(CI_high), "",
+                       sprintf("[%.2f, %.2f]", CI_low, CI_high)),
+    CI_level  = ifelse(is.na(CI_level), "",
+                       sprintf("%d%%", as.integer(round(CI_level * 100))))
+  ) %>%
+  select(Predictor, DV, Method, Statistic, CI, CI_level, N, EffectSize, Wave)
 
-## ---- Labels ---------------------------------------------------------------
+writexl::write_xlsx(cor_table, "outputs/cor_table_by_predictor.xlsx")
+
+
+### 4. Figures 2 and F1: correlations of continuous and ordinal predictors -----
+# Outcome-with-outcome correlations are reported in the text, not plotted.
+corr_vis <- results_df %>%
+  filter(Predictor %in% c(continuous_preds, ordinal_preds),
+         grepl("pearson|spearman", Method, ignore.case = TRUE))
+
 name_map <- c(
   "Age"                                = "Age",
   "YearsExperience"                    = "Years of experience",
@@ -273,7 +153,7 @@ name_map <- c(
   "EBMH_skills_mean"                   = "EBMH-related skills",
   "research_experience_mean"           = "Previous research experience",
   "UniversityEducation"                = "EBMH-endorsing university education",
-  "perception_gap_mean"                = "Perceived research\u2013practice gap",
+  "perception_gap_mean"                = "Perceived research–practice gap",
   "EBMH_importance_clinical_expertise" = "Clinical expertise valued over research",
   "SchoolSliderCBT"                    = "CBT orientation",
   "SchoolSliderPsychodynamic"          = "Psychodynamic orientation",
@@ -332,13 +212,12 @@ corr_vis <- corr_vis %>%
     SingleWave = grepl("Wave 1|Wave 2", Wave)
   )
 
-## ---- Order predictors by largest absolute association ---------------------
-# One shared ordering across all three panels so rows can be scanned across.
+# Same predictor order in all three panels: largest absolute association on top
 order_predictors <- function(df) {
   lev <- df %>%
     group_by(PredLabel) %>%
     summarise(MaxAbs = max(abs(Statistic), na.rm = TRUE), .groups = "drop") %>%
-    arrange(MaxAbs) %>%          # ascending, so the largest ends up at the top
+    arrange(MaxAbs) %>%
     pull(PredLabel)
   df$PredLabel <- factor(df$PredLabel, levels = lev)
   df
@@ -346,40 +225,28 @@ order_predictors <- function(df) {
 
 corr_vis <- order_predictors(corr_vis)
 
-## ---- Plot builder ---------------------------------------------------------
-# A function rather than ggplot2's %+%, which is masked by psych.
+# Forest plot (a function instead of ggplot2's %+%, which psych masks)
 build_forest <- function(df, breaks_x, labels_x, base_size = 11) {
   
   ggplot(df, aes(x = Statistic, y = PredLabel)) +
-    
     annotate("rect", xmin = -0.10, xmax = 0.10, ymin = -Inf, ymax = Inf,
              fill = "grey85", alpha = 0.35) +
     geom_vline(xintercept = 0, linewidth = 0.4, colour = "grey40") +
-    
     geom_errorbarh(aes(xmin = CI_low, xmax = CI_high),
                    height = 0, linewidth = 0.5, colour = "grey30") +
     geom_point(aes(shape = SingleWave),
                size = 2.1, fill = "white", colour = "#2F4F4F") +
-    
     scale_shape_manual(
       values = c(`FALSE` = 16, `TRUE` = 21),
       labels = c(`FALSE` = "Both data collections",
                  `TRUE`  = "One data collection only"),
       name = NULL
     ) +
-    
     facet_grid(Family ~ DVLabel, scales = "free_y", space = "free_y",
                switch = "y") +
-    
-    scale_x_continuous(
-      limits = c(-0.75, 0.85),
-      breaks = breaks_x,
-      labels = labels_x,
-      expand = expansion(mult = 0.02)
-    ) +
-    
+    scale_x_continuous(limits = c(-0.75, 0.85), breaks = breaks_x,
+                       labels = labels_x, expand = expansion(mult = 0.02)) +
     labs(x = "Correlation with 95% confidence interval", y = NULL) +
-    
     theme_minimal(base_size = base_size) +
     theme(
       panel.grid.major.y = element_line(colour = "grey93", linewidth = 0.3),
@@ -399,21 +266,15 @@ build_forest <- function(df, breaks_x, labels_x, base_size = 11) {
     )
 }
 
-## ---- Full version (appendix) ----------------------------------------------
-# Three ticks per panel; more than that is unreadable at this panel width.
-cor_forest <- build_forest(
-  corr_vis,
-  breaks_x = c(-0.5, 0, 0.5),
-  labels_x = c("-.50", "0", ".50")
-)
+## Figure F1: all predictors (Appendix F)
+cor_forest <- build_forest(corr_vis,
+                           breaks_x = c(-0.5, 0, 0.5),
+                           labels_x = c("-.50", "0", ".50"))
 
-cor_forest
+ggsave("plots/FigureF1_all_correlations.png", cor_forest,
+       width = 13, height = 8.5, dpi = 600, bg = "white")
 
-ggsave("plots/FigureF1_all_correlations.png", cor_forest, width = 13, 
-       height = 8.5, dpi = 300, bg = "white")
-
-## ---- Compact version (main text) ------------------------------------------
-# Predictors whose largest association reaches |.15|.
+## Figure 2: predictors with at least one association of |r| >= .15
 corr_main <- corr_vis %>%
   group_by(PredLabel) %>%
   filter(max(abs(Statistic), na.rm = TRUE) >= 0.15) %>%
@@ -426,40 +287,33 @@ Figure2_correlations <- build_forest(
   labels_x = c("-.50", "-.25", "0", ".25", ".50", ".75")
 )
 
-Figure2_correlations
-
 ggsave("plots/Figure2_correlations.png", Figure2_correlations,
-       width = 12, height = 5.5, dpi = 300, bg = "white")
+       width = 12, height = 5.5, dpi = 600, bg = "white")
 
-## ---- Categorical predictors -----------------------------------
 
-# Country
+### 5. Figure 3: dichotomous predictors ------------------------------------------
 plot_country <- make_split_raincloud(
-  data = data, DVs = DVs, group_var = Country,
+  data, DVs, Country,
   plot_title = "Country", legend_title = "Country"
 )
 
-
-# Professional background
 plot_background <- make_split_raincloud(
   data, DVs, ProfessionalBackground,
   plot_title = "Professional Background", legend_title = "Background"
 )
 
-# Gender - recoded because the other categories have very few cases
+# Gender: only female and male shown (other categories n = 1 each)
 data$GenderIdentity_recode <- ifelse(
   data$GenderIdentity %in% c("Male", "Female"),
-  as.character(data$GenderIdentity),
-  NA
+  as.character(data$GenderIdentity), NA
 )
-
 
 plot_gender <- make_split_raincloud(
   data, DVs, GenderIdentity_recode,
   plot_title = "Gender Identity", legend_title = "Gender"
 )
 
-# Degree
+# Degree: shortened labels
 data$Degree_plot <- factor(
   ifelse(is.na(data$Degree), NA,
          ifelse(grepl("PhD", data$Degree), "PhD Degree", "Master's Degree")),
@@ -468,18 +322,18 @@ data$Degree_plot <- factor(
 
 plot_degree <- make_split_raincloud(
   data, DVs, Degree_plot,
-  plot_title   = "Degree",
-  legend_title = "Degree"
+  plot_title = "Degree", legend_title = "Degree"
 )
 
-# Combine
-combined_cat_cor <- grid.arrange(plot_country, plot_background,
-                                 plot_gender, plot_degree, ncol = 2)
+combined_cat_cor <- arrangeGrob(plot_country, plot_background,
+                                plot_gender, plot_degree, ncol = 2)
 
-ggsave("plots/Figure3_categorical_variables.png", combined_cat_cor, 
-       width = 11, height = 7, dpi = 300, bg = "white")
+ggsave("plots/Figure3_categorical_variables.png", combined_cat_cor,
+       width = 11, height = 7, dpi = 600, bg = "white")
 
-# Work setting plot (Figure 4)
+
+### 6. Figure 4: work setting ------------------------------------------------------
+# "Other" is left out; examples in brackets are removed from the labels
 ws_data <- data %>%
   filter(!is.na(WorkSetting), !grepl("^Other", WorkSetting)) %>%
   mutate(WorkSetting = sub(" \\(e\\.g\\..*\\)$", "", as.character(WorkSetting)))
@@ -493,13 +347,14 @@ ws_long <- ws_data %>%
                values_drop_na = TRUE) %>%
   left_join(ws_n, by = "WorkSetting") %>%
   mutate(
-    DV      = factor(dv_map[DV], levels = c("EBMH attitude", "EBMH openness", "EBMH use")),
-    Setting = factor(WorkSetting),                                  # for the colours
-    WorkSetting = paste0(WorkSetting, " (n = ", n_setting, ")"),    # axis label with n
+    DV          = factor(dv_map[DV],
+                         levels = c("EBMH attitude", "EBMH openness", "EBMH use")),
+    Setting     = factor(WorkSetting),
+    WorkSetting = paste0(WorkSetting, " (n = ", n_setting, ")"),
     WorkSetting = forcats::fct_reorder(WorkSetting, value, .fun = median)
   )
 
-# One colour per work setting (assigned in alphabetical order of the settings)
+# One colour per work setting (alphabetical order of the settings)
 pal_colors_ws <- c("#5B8DB8", "#735965", "#C1AEB7", "#4A6C6F",
                    "#AF97A2", "#7FB685", "#437549", "#708090")
 
@@ -518,14 +373,17 @@ gg <- ggplot(ws_long, aes(x = WorkSetting, y = value, fill = Setting)) +
 
 save_plot(gg, "Figure4_work_setting", width = 12, height = 10)
 
+
 # Clean environment ---------------------------------------------------------------
-rm(corr_vis, cor_plot, res, results, results_df, 
-   all_vars, binary_preds, continuous_preds, dv, 
-   DVs, method, nobs, nominal_preds, ordinal_preds, 
-   pred, pval, rowi, stat, var, x, y, 
-   pal_colors_ws, cont_ord_vars, stack_df, plot_background, 
-   plot_country, plot_degree, plot_gender, data_filtered, 
-   combined_cat_cor, gg, name_map, cor_table)
+rm(list = intersect(c(
+  "DVs", "continuous_preds", "ordinal_preds", "binary_preds", "nominal_preds",
+  "all_vars", "corr_vars", "var", "results", "rowi", "dv", "pred", "x", "y",
+  "res", "method", "stat", "nobs", "ci", "conf", "results_df", "cor_table",
+  "corr_vis", "corr_main", "name_map", "dv_map", "family_map",
+  "order_predictors", "build_forest", "cor_forest", "Figure2_correlations",
+  "plot_country", "plot_background", "plot_gender", "plot_degree",
+  "combined_cat_cor", "ws_data", "ws_n", "ws_long", "pal_colors_ws", "gg"
+), ls()))
 
 data$GenderIdentity_recode <- NULL
-
+data$Degree_plot <- NULL
