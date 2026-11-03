@@ -16,7 +16,7 @@ desc_vars <- c(
   "EBMH_importance_clinical_expertise", "EBMH_skills_mean",
   "perception_gap_mean", "workplace_influences_mean",
   "employer_influences_mean", "research_experience_mean",
-  "EBMH_PsychDisorders_mean", "FamiliarityEBMH",
+  "EBMH_PsychDisorders_mean", "FamiliarityEBMH","UniversityEducation",
   "UpdatedConferences", "UpdatedWorkplace", "UpdatedSupervision",
   "UpdatedPrivate", "UpdatedOther",
   "EBMHEndorsementConferences", "EBMHEndorsementWorkplace",
