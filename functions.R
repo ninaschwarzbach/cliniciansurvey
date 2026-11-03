@@ -7,39 +7,37 @@
 
 # Data Cleaning
     
- ## Function for transforming Likert (5 point) to numbers
-    likert_to_num <- function(x) {
-      x <- trimws(tolower(x))  # remove spaces, lowercase
-      case_when(
-        x %in% c("strongly agree") ~ 5,
-        x %in% c("agree") ~ 4,
-        x %in% c("neither agree nor disagree") ~ 3,
-        x %in% c("disagree") ~ 2,
-        x %in% c("strongly disagree") ~ 1,
-        TRUE ~ NA_real_  # everything else becomes NA
-      )
-    }
-    
-  ## Merge 2 Likert Variables (Duplicates)
-    merge_likert_numeric <- function(df, var1, var2, new_var_name, likert_map) {
-      # Convert both to numeric using likert_map
-      num1 <- likert_map[as.character(df[[var1]])]
-      num2 <- likert_map[as.character(df[[var2]])]
-      
-      # Merge: take mean if both present, otherwise take non-NA
-      merged <- ifelse(!is.na(num1) & !is.na(num2),
-                       rowMeans(cbind(num1, num2), na.rm = TRUE),
-                       ifelse(!is.na(num1), num1, num2))
-      
-      # Assign to new variable
-      df[[new_var_name]] <- merged
-      return(df)
-    }
-    
-  # Function to reverse text-based Likert scales
-    reverse_likert_text <- function(x) {
-      factor(x, levels = likert_levels, labels = likert_reversed)
-    }
+## Likert answers (5 points) from text to numbers
+# Covers the label versions in the Qualtrics exports, e.g. "Strongly Agree",
+# "Strongly\n\nAgree" (Wave 1) and "Agree totally" (Wave 2 context items)
+likert_to_num <- function(x) {
+  x <- tolower(gsub("\\s+", " ", trimws(as.character(x))))
+  case_when(
+    x %in% c("strongly agree", "agree totally")       ~ 5,
+    x == "agree"                                       ~ 4,
+    x == "neither agree nor disagree"                  ~ 3,
+    x == "disagree"                                    ~ 2,
+    x %in% c("strongly disagree", "disagree totally") ~ 1,
+    TRUE ~ NA_real_
+  )
+}
+
+## Merge two versions of the same Likert item (mean if both answered,
+## otherwise the answered one)
+merge_likert_numeric <- function(df, var1, var2, new_var_name) {
+  num1 <- likert_to_num(df[[var1]])
+  num2 <- likert_to_num(df[[var2]])
+  df[[new_var_name]] <- ifelse(!is.na(num1) & !is.na(num2),
+                               (num1 + num2) / 2,
+                               ifelse(!is.na(num1), num1, num2))
+  df
+}
+
+## Reverse a text-based Likert item (returns the reversed answer as text)
+reverse_likert_text <- function(x) {
+  c("Strongly disagree", "Disagree", "Neither Agree nor Disagree",
+    "Agree", "Strongly agree")[6 - likert_to_num(x)]
+}
     
   # Function to replace NA -> 0 only when forced-choice is answered
       fill_na <- function(df, slider_cols, forced_col) {
@@ -655,7 +653,7 @@
     # Effect size estimation 
     categorize_effect <- function(stat, method) {
       if (is.na(stat)) return(NA)
-      abs_stat <- abs(stat)
+      abs_stat <- abs(round(stat, 2))
       
       # use different cutoffs by method type
       if (grepl("eta", method, ignore.case = TRUE)) {
