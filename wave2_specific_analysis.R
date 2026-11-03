@@ -2,7 +2,7 @@
 # Clinician Survey Project - Occasions Discussion Evidence -
 # Author: Nina Schwarzbach
 # Start date: 31.09.2025
-# Date last updated: 13.08.2026
+# Date last updated: 03.11.2026
 # ===========================================================================
 
 
@@ -128,7 +128,8 @@ gg <- gg + expand_limits(y = max(totals$ypos) * 1.05)
 print(gg)
 
 
-ggsave("plots/occasions_updated.png", gg, width = 11, height = 5, dpi = 300)
+ggsave("plots/Figure5A_feeling_updated.png", gg, width = 11, 
+       height = 5, dpi = 300, bg = "white")
 
 
 ## 6.3 EBMH endorsement  ---------------------------------------------------------------
@@ -245,8 +246,8 @@ gg2 <- gg2 +
 
 print(gg2)
 
-ggsave("plots/endorsed.png", gg2, width = 11, height = 5, dpi = 300)
-
+ggsave("plots/Figure5B_endorsement.png", gg2, width = 11, height = 5, 
+       dpi = 300, bg = "white")
 
 ## 6.4 Use of evidence, research resources,  and treatment manuals   ---------------------------------------------------------------
 

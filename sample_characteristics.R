@@ -2,7 +2,7 @@
 # Clinician Survey Project - Sample Characteristics -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 20.08.2026
+# Date last updated: 03.11.2026
 # ===========================================================================
 
 
@@ -100,7 +100,8 @@ combined_demo <- ggplot(demo_long, aes(x = Wave, y = value, fill = Wave)) +
   theme_plots() +
   theme(legend.position = "none")
 
-save_plot(combined_demo, "combined_demographics", width = 9, height = 4.5)
+save_plot(combined_demo, "FigureD1_age_experience", 
+          width = 9, height = 4.5)
 
 # Clean environment ---------------------------------------------------------------
 rm(box_age, box_experience, combined_demo, demo_long, desc_table, cont_vars, 

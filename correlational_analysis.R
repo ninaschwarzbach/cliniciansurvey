@@ -2,7 +2,7 @@
 # Clinician Survey Project - Correlational Analysis -
 # Author: Nina Schwarzbach
 # Start date: 30.09.2025
-# Date last updated: 19.08.2026
+# Date last updated: 03.11.2026
 # ===========================================================================
 
 
@@ -409,8 +409,8 @@ cor_forest <- build_forest(
 
 cor_forest
 
-ggsave("plots/cor_forest.png", cor_forest,
-       width = 13, height = 8.5, dpi = 300)
+ggsave("plots/FigureF1_all_correlations.png", cor_forest, width = 13, 
+       height = 8.5, dpi = 300, bg = "white")
 
 ## ---- Compact version (main text) ------------------------------------------
 # Predictors whose largest association reaches |.15|.
@@ -420,16 +420,16 @@ corr_main <- corr_vis %>%
   ungroup() %>%
   order_predictors()
 
-cor_forest_main <- build_forest(
+Figure2_correlations <- build_forest(
   corr_main,
   breaks_x = c(-0.5, -0.25, 0, 0.25, 0.5, 0.75),
   labels_x = c("-.50", "-.25", "0", ".25", ".50", ".75")
 )
 
-cor_forest_main
+Figure2_correlations
 
-ggsave("plots/cor_forest_main.png", cor_forest_main,
-       width = 12, height = 5.5, dpi = 300)
+ggsave("plots/Figure2_correlations.png", Figure2_correlations,
+       width = 12, height = 5.5, dpi = 300, bg = "white")
 
 ## ---- Categorical predictors -----------------------------------
 
@@ -476,8 +476,8 @@ plot_degree <- make_split_raincloud(
 combined_cat_cor <- grid.arrange(plot_country, plot_background,
                                  plot_gender, plot_degree, ncol = 2)
 
-ggsave("plots/combined_cat_cor.png", combined_cat_cor,
-       width = 11, height = 9, dpi = 300)
+ggsave("plots/Figure3_categorical_variables.png", combined_cat_cor, 
+       width = 11, height = 9, dpi = 300, bg = "white")
 
 # Work setting plot (Figure 4)
 ws_data <- data %>%
@@ -516,7 +516,7 @@ gg <- ggplot(ws_long, aes(x = WorkSetting, y = value, fill = Setting)) +
   theme_plots() +
   theme(legend.position = "none")
 
-save_plot(gg, "EBMH_WorkSetting", width = 10, height = 11)
+save_plot(gg, "Figure4_work_setting", width = 12, height = 10)
 
 # Clean environment ---------------------------------------------------------------
 rm(corr_vis, cor_plot, res, results, results_df, 
