@@ -279,14 +279,14 @@ name_map <- c(
   "SchoolSliderPsychodynamic"          = "Psychodynamic orientation",
   "SchoolSliderAnalytical"             = "Analytical orientation",
   "SchoolSliderSystemic"               = "Systemic orientation",
-  "SchoolSliderPersonCentered"         = "Person-centred orientation",
+  "SchoolSliderPersonCentered"         = "Person-centered orientation",
   "SchoolSliderNeuropsychology"        = "Neuropsychological orientation",
   "SchoolSliderACT"                    = "ACT orientation",
   "SchoolSliderHumanistic"             = "Humanistic orientation",
   "SchoolSliderMBT"                    = "MBT orientation",
   "SchoolSliderOther"                  = "Other orientation",
-  "workplace_influences_mean"          = "Workplace influences",
-  "employer_influences_mean"           = "Employer inluences",
+  "workplace_influences_mean"          = "Colleague support",
+  "employer_influences_mean"           = "Employer support",
   "EBMH_PsychDisorders_mean"           = "Importance of EBMH for psychotic disorders"
 )
 
@@ -477,7 +477,7 @@ combined_cat_cor <- grid.arrange(plot_country, plot_background,
                                  plot_gender, plot_degree, ncol = 2)
 
 ggsave("plots/Figure3_categorical_variables.png", combined_cat_cor, 
-       width = 11, height = 9, dpi = 300, bg = "white")
+       width = 11, height = 7, dpi = 300, bg = "white")
 
 # Work setting plot (Figure 4)
 ws_data <- data %>%

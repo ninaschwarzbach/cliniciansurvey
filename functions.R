@@ -2,7 +2,7 @@
 # Clinician Survey Project - Functions
 # Author: Nina Schwarzbach
 # Start date: 01.10.2025
-# Date last updated: 02.11.2026
+# Date last updated: 03.11.2026
 # ===========================================================================
 
 # Data Cleaning
@@ -338,7 +338,7 @@
       # Boxplot + raw points by wave. For continuous vars and scale means.
       wave_box <- function(data, var,
                            title = NULL, ylab = NULL,
-                           y_limits = c(1, 5),
+                           y_limits = c(0.5, 5.5),
                            show_points = TRUE,
                            show_legend = FALSE) {
         
@@ -801,7 +801,7 @@
               fill = .data[[group_name]]
             ),
             side = "l",
-            trim = TRUE,
+            trim = F,
             alpha = violin_alpha,
             na.rm = TRUE
           )
@@ -820,7 +820,7 @@
               fill = .data[[group_name]]
             ),
             side = "r",
-            trim = TRUE,
+            trim = F,
             alpha = violin_alpha,
             na.rm = TRUE
           )
@@ -873,9 +873,10 @@
       p <- p +
         ggplot2::scale_fill_manual(
           values = colors_named,
-          name = group_name,
+          name = legend_title,
           drop = FALSE
         ) +
+        ggplot2::scale_y_continuous(breaks = 1:5) +
         ggplot2::labs(
           title = if (!is.null(plot_title)) {
             plot_title
@@ -884,9 +885,6 @@
           },
           x = NULL,
           y = "Score"
-        ) +
-        ggplot2::coord_cartesian(
-          clip = "off"
         ) +
         ggplot2::theme_classic() +
         ggplot2::theme(

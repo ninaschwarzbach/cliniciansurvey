@@ -15,17 +15,15 @@ desc_table_1 <- describe_continuous_by_group(data, desc_vars, group = "Wave", sa
 
 # 5.1 Core outcomes (single items) -> stacked bars
 plot_outcomes <- likert_panel(
-  data, names(labels_items), labels = labels_items, ncol = 2,
-  title = "Core EBMH outcomes"
+  data, names(labels_items), labels = labels_items, ncol = 2
 )
 save_plot(plot_outcomes, "FigureE1_single_items", width = 11, height = 6)
 
 # 5.2 Scale means -> boxplots
 plot_means <- box_panel(
-  data, names(labels_means), labels = labels_means, ncol = 2,
-  title = "EBMH scale means by wave"
+  data, names(labels_means), labels = labels_means, ncol = 2
 )
-save_plot(plot_means, "FigureE2_scale_means", width = 8, height = 7)
+save_plot(plot_means, "FigureE2_scale_means", width = 8, height = 10)
 
 # 5.3 Feeling updated (Wave 2 only) -> stacked bars
 plot_updated <- likert_panel(

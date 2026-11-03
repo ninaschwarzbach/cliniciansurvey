@@ -109,9 +109,8 @@ gg <- ggplot(stack_df, aes(x = Occasion, y = Count, fill = Updatedness)) +
             color = "black", size = 3) +
   coord_flip() +
   labs(
-    title = "Feeling Updated About EBMH by Context",
     x = "",
-    y = "Number of respondents (selected occasion)",
+    y = "Number of respondents (selected context)",
     fill = "Feeling updated"
   ) +
   scale_fill_manual(values = pal_colors) +
@@ -126,10 +125,6 @@ gg <- gg + geom_text(data = totals, aes(x = Occasion, y = ypos, label = lab),
 gg <- gg + expand_limits(y = max(totals$ypos) * 1.05)
 
 print(gg)
-
-
-ggsave("plots/Figure5A_feeling_updated.png", gg, width = 11, 
-       height = 5, dpi = 300, bg = "white")
 
 
 ## 6.3 EBMH endorsement  ---------------------------------------------------------------
@@ -226,9 +221,8 @@ gg2 <- ggplot(stack_df, aes(x = Occasion, y = Count, fill = Endorsement)) +
             color = "black", size = 3) +
   coord_flip() +
   labs(
-    title = "Colleagues’ Endorsement of EBMH by Context",
     x = "",
-    y = "Number of respondents (selected occasion)",
+    y = "Number of respondents (selected context)",
     fill = "EBMH endorsement"
   ) +
   scale_fill_manual(values = pal_colors) +
@@ -246,8 +240,15 @@ gg2 <- gg2 +
 
 print(gg2)
 
-ggsave("plots/Figure5B_endorsement.png", gg2, width = 11, height = 5, 
-       dpi = 300, bg = "white")
+# Figure 5: colleagues' endorsement (A) + feeling updated (B), Wave 2
+Figure5 <- (gg2 / gg) +
+  plot_annotation(tag_levels = "A") &
+  theme(plot.tag = element_text(size = 16, face = "bold"))
+
+print(Figure5)
+
+ggsave("plots/Figure5_endorsement_updated.png", Figure5,
+       width = 11, height = 9, dpi = 300, bg = "white")
 
 ## 6.4 Use of evidence, research resources,  and treatment manuals   ---------------------------------------------------------------
 

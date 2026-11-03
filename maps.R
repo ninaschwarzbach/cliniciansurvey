@@ -2,7 +2,7 @@
 # Clinician Survey Project - Maps
 # Author: Nina Schwarzbach
 # Start date: 21.10.2025
-# Date last updated: 02.11.2026
+# Date last updated: 03.11.2026
 # ===========================================================================
 
 # plot colours 
@@ -40,8 +40,7 @@ group_colors_2 <- c("#7FB685", "#AF97A2")
     workplace_influences_mean = "Colleague Support",
     employer_influences_mean  = "Employer Support",
     research_experience_mean  = "Research Experience",
-    EBMH_PsychDisorders_mean  = "Importance of EBMH for \nPsychotic Disorders"
-  )
+    EBMH_PsychDisorders_mean  = "Importance of EBMH\nfor Psychotic Disorders")
   
   # Single Likert items -> stacked bars
   labels_items <- c(

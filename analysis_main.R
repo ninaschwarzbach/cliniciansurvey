@@ -21,6 +21,7 @@ packages <- c(
   "gghalves",
   "rlang",
   "gridExtra",
+  "patchwork",
   "stringr",
   "reshape2",
   "ggrain",
