@@ -7,8 +7,9 @@
 # Prepares the open-ended responses of both waves for the qualitative
 # analysis: availability per wave, response counts and lengths (Appendix C)
 # and a coding sheet.
-# Output: outputs/open_item_availability.csv, outputs/open_response_summary.csv,
-#         outputs/open_response_coding.csv, outputs/open_response_feedback.csv
+# Output (folder set in analysis_main.R): open_item_availability.csv,
+#         open_response_summary.csv, open_response_coding.csv,
+#         open_response_feedback.csv
 # ===========================================================================
 
 
@@ -98,7 +99,7 @@ availability <- item_registry %>%
   select(item, role, construct, in_wave1, in_wave2)
 
 print(as.data.frame(availability), row.names = FALSE)
-write.csv(availability, "outputs/open_item_availability.csv", row.names = FALSE)
+write.csv(availability, file.path(dir_outputs, "open_item_availability.csv"), row.names = FALSE)
 
 # ---------------------------------------------------------------------------
 # 4. Long-format extraction (one row per respondent x item)
@@ -170,7 +171,7 @@ open_summary <- open_long %>%
   arrange(wave, role, item)
 
 print(as.data.frame(open_summary), row.names = FALSE)
-write.csv(open_summary, "outputs/open_response_summary.csv", row.names = FALSE)
+write.csv(open_summary, file.path(dir_outputs, "open_response_summary.csv"), row.names = FALSE)
 
 # ---------------------------------------------------------------------------
 # 6. Coding sheet
@@ -186,7 +187,7 @@ coding_sheet <- open_long %>%
     coder_note     = NA_character_
   )
 
-write.csv(coding_sheet, "outputs/open_response_coding.csv", row.names = FALSE)
+write.csv(coding_sheet, file.path(dir_outputs, "open_response_coding.csv"), row.names = FALSE)
 cat("\nCoding sheet rows to code:", nrow(coding_sheet), "\n")
 
 # Questionnaire feedback is kept separate (Appendix C)
@@ -194,7 +195,7 @@ feedback_sheet <- open_long %>%
   filter(role == "feedback", status == "informative") %>%
   arrange(wave, item, row_id)
 
-write.csv(feedback_sheet, "outputs/open_response_feedback.csv", row.names = FALSE)
+write.csv(feedback_sheet, file.path(dir_outputs, "open_response_feedback.csv"), row.names = FALSE)
 
 # ---------------------------------------------------------------------------
 # 7. Optional: print all informative responses of one item, e.g.

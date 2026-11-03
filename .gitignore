@@ -1,13 +1,17 @@
-# ---- Data files ----
+# ---- Data (never on GitHub before publication) ----
 data/
 *.csv
+*.tsv
 *.sav
 *.xlsx
 *.xls
-*.tsv
 *.dat
 *.rds
 *.RData
+
+# ---- Output tables (may contain open-ended responses) ----
+outputs/
+outputs_public_data/
 
 # ---- R specific ----
 .Rhistory
@@ -31,6 +35,3 @@ desktop.ini
 *.yaml
 *.yml
 *.env
-
-"data/" 
-"data/" 

@@ -4,9 +4,9 @@
 # Start date: 30.09.2025
 # Date last updated: 03.11.2026
 #
-# Output: Table 1 (outputs/Table1_continuous.xlsx),
-#         Table 2 (outputs/Table2_categorical_wide.csv),
-#         Figure D1 (plots/FigureD1_age_experience.png)
+# Output (folders set in analysis_main.R): Table 1 (Table1_continuous.xlsx),
+#         Table 2 (Table2_categorical_wide.csv),
+#         Figure D1 (FigureD1_age_experience.png)
 # ===========================================================================
 
 # Graduation year is stored as text in the raw data
@@ -36,7 +36,7 @@ desc_table[numeric_columns] <- lapply(desc_table[numeric_columns], round, digits
 
 print(desc_table, n = Inf)
 
-writexl::write_xlsx(desc_table, "outputs/Table1_continuous.xlsx")
+writexl::write_xlsx(desc_table, file.path(dir_outputs, "Table1_continuous.xlsx"))
 
 
 ### 2. Categorical variables (Table 2) ---------------------------------------

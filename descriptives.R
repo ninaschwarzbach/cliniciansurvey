@@ -6,7 +6,8 @@
 #
 # Descriptive statistics of all analysed variables, by wave and in total
 # (Tables 3 and 4), and Figures E1 and E2 (Appendix E).
-# Output: outputs/descriptives_continuous_main..., plots/FigureE1..., plots/FigureE2...
+# Output (folders set in analysis_main.R): descriptives_continuous_main...,
+#         FigureE1..., FigureE2...
 # ===========================================================================
 
 
@@ -26,7 +27,7 @@ desc_vars <- c(
 
 desc_table_1 <- describe_continuous_by_group(
   data, desc_vars, group = "Wave", save = TRUE,
-  file_prefix = "outputs/descriptives_continuous_main"
+  file_prefix = file.path(dir_outputs, "descriptives_continuous_main")
 )
 desc_table_1
 

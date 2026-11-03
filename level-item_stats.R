@@ -7,7 +7,8 @@
 # Reliability of the final scales (Method), item analysis of the original
 # EBMH use and EBMH attitude items (Appendix B, Table B2) and item-level
 # descriptive statistics (Table B1).
-# Output: outputs/TableB1_item_stats.xlsx, outputs/TableB2_attitude_reliability.xlsx
+# Output (folder set in analysis_main.R): TableB1_item_stats.xlsx,
+#         TableB2_attitude_reliability.xlsx
 # ===========================================================================
 
 
@@ -110,7 +111,7 @@ tableB2$Correlation <- c("—", "—",
 
 cat("\nTable B2: EBMH attitude reliability\n")
 print(tableB2, row.names = FALSE)
-writexl::write_xlsx(tableB2, "outputs/TableB2_attitude_reliability.xlsx")
+writexl::write_xlsx(tableB2, file.path(dir_outputs, "TableB2_attitude_reliability.xlsx"))
 
 
 ### 3. Table B1: item-level descriptive statistics ---------------------------
@@ -155,7 +156,7 @@ tableB1 <- bind_rows(lapply(names(items_B1), function(item) {
 
 cat("\nTable B1: item-level descriptive statistics\n")
 print(tableB1, row.names = FALSE)
-writexl::write_xlsx(tableB1, "outputs/TableB1_item_stats.xlsx")
+writexl::write_xlsx(tableB1, file.path(dir_outputs, "TableB1_item_stats.xlsx"))
 
 
 ### 4. Floor and ceiling effects of the analysed variables -------------------
@@ -190,4 +191,3 @@ rm(list = intersect(c(
   "attitude_full", "item4", "attitude_configs", "tableB2", "n_pairs", "r_att",
   "items_B1", "tableB1", "desc_vars", "floor_ceiling_check"
 ), ls()))
-

@@ -7,7 +7,7 @@
 # Contexts in which Wave 2 participants encounter colleagues: colleagues'
 # endorsement of EBMH and feeling updated about EBMH per context (Figure 5).
 # Means and SDs per context are in Table 4 (descriptives.R).
-# Output: plots/Figure5_endorsement_updated.png
+# Output (folder set in analysis_main.R): Figure5_endorsement_updated.png
 # ===========================================================================
 
 
@@ -107,7 +107,7 @@ Figure5 <- (panel_endorsement / panel_updated) +
   theme(plot.tag = element_text(size = 16, face = "bold"),
         legend.position = "right")
 
-ggsave("plots/Figure5_endorsement_updated.png", Figure5,
+ggsave(file.path(dir_plots, "Figure5_endorsement_updated.png"), Figure5,
        width = 11, height = 9, dpi = 600, bg = "white")
 
 
@@ -117,4 +117,3 @@ rm(list = intersect(c(
   "response_labels", "response_levels", "response_colors",
   "make_context_panel", "panel_endorsement", "panel_updated", "Figure5"
 ), ls()))
-

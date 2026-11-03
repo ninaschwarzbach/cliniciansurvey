@@ -6,8 +6,8 @@
 #
 # Associations of therapist and contextual characteristics with EBMH
 # attitude, openness and use (Table F1), and Figures 2, 3, 4 and F1.
-# Output: outputs/cor_table_by_predictor.xlsx, plots/Figure2..., Figure3...,
-#         Figure4..., FigureF1...
+# Output (folders set in analysis_main.R): cor_table_by_predictor.xlsx,
+#         Figure2..., Figure3..., Figure4..., FigureF1...
 # ===========================================================================
 
 
@@ -36,8 +36,9 @@ nominal_preds <- c("GenderIdentity", "Degree", "WorkSetting",
 all_vars <- c(DVs, continuous_preds, ordinal_preds, binary_preds, nominal_preds)
 
 # Variable classes
-for (var in ordinal_preds) data[[var]] <- as.ordered(data[[var]])
-for (var in c(binary_preds, nominal_preds)) data[[var]] <- as.factor(data[[var]])
+# (only variables that are in the data; the public dataset has no gender)
+for (var in intersect(ordinal_preds, names(data))) data[[var]] <- as.ordered(data[[var]])
+for (var in intersect(c(binary_preds, nominal_preds), names(data))) data[[var]] <- as.factor(data[[var]])
 
 
 ### 2. Associations with the three outcomes -----------------------------------
@@ -137,7 +138,7 @@ cor_table <- results_df %>%
   ) %>%
   select(Predictor, DV, Method, Statistic, CI, CI_level, N, EffectSize, Wave)
 
-writexl::write_xlsx(cor_table, "outputs/cor_table_by_predictor.xlsx")
+writexl::write_xlsx(cor_table, file.path(dir_outputs, "cor_table_by_predictor.xlsx"))
 
 
 ### 4. Figures 2 and F1: correlations of continuous and ordinal predictors -----
@@ -271,7 +272,7 @@ cor_forest <- build_forest(corr_vis,
                            breaks_x = c(-0.5, 0, 0.5),
                            labels_x = c("-.50", "0", ".50"))
 
-ggsave("plots/FigureF1_all_correlations.png", cor_forest,
+ggsave(file.path(dir_plots, "FigureF1_all_correlations.png"), cor_forest,
        width = 13, height = 8.5, dpi = 600, bg = "white")
 
 ## Figure 2: predictors with at least one association of |r| >= .15
@@ -287,7 +288,7 @@ Figure2_correlations <- build_forest(
   labels_x = c("-.50", "-.25", "0", ".25", ".50", ".75")
 )
 
-ggsave("plots/Figure2_correlations.png", Figure2_correlations,
+ggsave(file.path(dir_plots, "Figure2_correlations.png"), Figure2_correlations,
        width = 12, height = 5.5, dpi = 600, bg = "white")
 
 
@@ -302,16 +303,19 @@ plot_background <- make_split_raincloud(
   plot_title = "Professional Background", legend_title = "Background"
 )
 
-# Gender: only female and male shown (other categories n = 1 each)
-data$GenderIdentity_recode <- ifelse(
-  data$GenderIdentity %in% c("Male", "Female"),
-  as.character(data$GenderIdentity), NA
-)
-
-plot_gender <- make_split_raincloud(
-  data, DVs, GenderIdentity_recode,
-  plot_title = "Gender Identity", legend_title = "Gender"
-)
+# Gender: only female and male shown (other categories n = 1 each);
+# not available in the public dataset
+if ("GenderIdentity" %in% names(data)) {
+  data$GenderIdentity_recode <- ifelse(
+    data$GenderIdentity %in% c("Male", "Female"),
+    as.character(data$GenderIdentity), NA
+  )
+  
+  plot_gender <- make_split_raincloud(
+    data, DVs, GenderIdentity_recode,
+    plot_title = "Gender Identity", legend_title = "Gender"
+  )
+}
 
 # Degree: shortened labels
 data$Degree_plot <- factor(
@@ -325,10 +329,13 @@ plot_degree <- make_split_raincloud(
   plot_title = "Degree", legend_title = "Degree"
 )
 
-combined_cat_cor <- arrangeGrob(plot_country, plot_background,
-                                plot_gender, plot_degree, ncol = 2)
+cat_plots <- list(plot_country, plot_background)
+if (exists("plot_gender")) cat_plots <- c(cat_plots, list(plot_gender))
+cat_plots <- c(cat_plots, list(plot_degree))
 
-ggsave("plots/Figure3_categorical_variables.png", combined_cat_cor,
+combined_cat_cor <- arrangeGrob(grobs = cat_plots, ncol = 2)
+
+ggsave(file.path(dir_plots, "Figure3_categorical_variables.png"), combined_cat_cor,
        width = 11, height = 7, dpi = 600, bg = "white")
 
 
@@ -382,7 +389,7 @@ rm(list = intersect(c(
   "corr_vis", "corr_main", "name_map", "dv_map", "family_map",
   "order_predictors", "build_forest", "cor_forest", "Figure2_correlations",
   "plot_country", "plot_background", "plot_gender", "plot_degree",
-  "combined_cat_cor", "ws_data", "ws_n", "ws_long", "pal_colors_ws", "gg"
+  "combined_cat_cor", "cat_plots", "ws_data", "ws_n", "ws_long", "pal_colors_ws", "gg"
 ), ls()))
 
 data$GenderIdentity_recode <- NULL

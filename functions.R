@@ -214,7 +214,7 @@ describe_categorical <- function(df,
                                  group = "Wave",
                                  include_na = FALSE,
                                  file_prefix = "Table2_Categorical",
-                                 out_folder = "outputs",
+                                 out_folder = dir_outputs,
                                  pct_digits = 1) {
   stopifnot(is.data.frame(df))
   vars <- intersect(vars, names(df))
@@ -286,7 +286,7 @@ describe_categorical <- function(df,
   # Ensure output folder exists
   if (!dir.exists(out_folder)) dir.create(out_folder, recursive = TRUE)
   
-  # Write CSV (outputs/<file_prefix>_wide.csv)
+  # Write CSV (<out_folder>/<file_prefix>_wide.csv)
   out_fname <- file.path(out_folder, paste0(file_prefix, "_wide.csv"))
   
   # If file exists, try to remove it first (e.g., if Excel had it open previously)
@@ -332,8 +332,9 @@ theme_plots <- function(base_size = 13) {
     )
 }
 
-## Save a plot as PNG in plots/ (600 dpi, white background)
-save_plot <- function(plot, filename, folder = "plots",
+## Save a plot as PNG in the plot folder set in analysis_main.R (600 dpi,
+## white background)
+save_plot <- function(plot, filename, folder = dir_plots,
                       width = 8, height = 6, dpi = 600) {
   if (!dir.exists(folder)) dir.create(folder, recursive = TRUE)
   ggsave(

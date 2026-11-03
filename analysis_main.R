@@ -45,8 +45,11 @@ source("functions.R", local = .func_env)
 source("maps.R",      local = .func_env)
 attach(.func_env, pos = 2, name = ".func_env")
 
-## 1.4 Empty the output folders, so every file in them comes from this run
-for (folder in c("plots", "outputs")) {
+## 1.4 Output folders (emptied first, so every file in them comes from this run)
+dir_outputs <- "outputs"
+dir_plots   <- "plots"
+
+for (folder in c(dir_plots, dir_outputs)) {
   if (dir.exists(folder)) {
     unlink(file.path(folder, "*"))
     message("Old files removed from ", folder, "/")
@@ -60,7 +63,7 @@ for (folder in c("plots", "outputs")) {
 source("data_cleaning.R")
 
 ### 3. Sample characteristics ------------------------------------------------
-# Figure D1
+# Tables 1 and 2, Figure D1
 source("sample_characteristics.R")
 
 ### 4. Scale creation and item-level statistics ------------------------------
@@ -89,7 +92,8 @@ source("open-ended_responses.R")
 
 ### 9. Clean up --------------------------------------------------------------
 detach(".func_env")
-rm(.func_env, folder, packages, packages_no_load, missing_packages)
+rm(.func_env, folder, packages, packages_no_load, missing_packages,
+   dir_outputs, dir_plots)
 
 # R and package versions used for this run
 sessionInfo()
