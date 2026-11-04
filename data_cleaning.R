@@ -2,7 +2,7 @@
 # Clinician Survey Project - Data Cleaning Script
 # Author: Nina Schwarzbach
 # Start date: 01.10.2025
-# Date last updated: 03.11.2026
+# Date last updated: 04.11.2026
 #
 # Input:  data/raw/wave1_data.csv, data/raw/wave2_data.csv (Qualtrics exports)
 # Output: data (cleaned, both waves combined), quali_wave1, quali_wave2
@@ -98,9 +98,6 @@ cat("Other country - Wave 2 removed:", n_complete_wave2 - nrow(wave2), "cases\n"
 participant_codes <- c(wave1$Q23, wave2$Q48)
 participant_codes <- participant_codes[!is.na(participant_codes)]
 unique(participant_codes[duplicated(participant_codes)])
-
-# Self-reported participation in the previous study (Wave 2)
-table(wave2$Q11)
 
 # Duplicated codes: compare demographics
 # "1234567"
@@ -311,6 +308,13 @@ UniversityEducation_discrepancies <- wave2 %>%
   filter(!is.na(UniversityEducation_1_num) & !is.na(UniversityEducation_2_num) & UniversityEducation_diff > 0) %>%
   select(UniversityEducation_1, UniversityEducation_2, UniversityEducation_1_num,
          UniversityEducation_2_num, UniversityEducation_diff)
+
+# Kept until section 12, to count the answers in the final sample
+wave2$dup_AttitudeEBMH4_diff <- ifelse(
+  !is.na(wave2$AttitudeEBMH4_num) & !is.na(wave2$AttitudeEBMH4_1_num),
+  wave2$AttitudeEBMH4_diff, NA)
+wave2$dup_UniversityEducation_both <- !is.na(wave2$UniversityEducation_1_num) &
+  !is.na(wave2$UniversityEducation_2_num)
 
 ## 5.3 Merge the two versions (mean if both answered, otherwise the one answered)
 wave2 <- merge_likert_numeric(wave2, "AttitudeEBMH4", "AttitudeEBMH4_1",
@@ -544,10 +548,13 @@ wave1 <- wave1 %>% filter(is.na(YearsExperience) | YearsExperience >= 1)
 cat("Less than 1 year of experience - Wave 1 removed:", n_before - nrow(wave1), "cases\n")
 
 # Unfinished questionnaires without years of experience
+n_before_w1 <- nrow(wave1)
+n_before_w2 <- nrow(wave2)
 wave1 <- wave1 %>% filter(!(Finished == "False" & is.na(YearsExperience)))
 wave2 <- wave2 %>% filter(!(Finished == "False" & is.na(YearsExperience)))
-
-rm(n_before)
+cat("Unfinished without years of experience - Wave 1 removed:", n_before_w1 - nrow(wave1),
+    "cases; Wave 2 removed:", n_before_w2 - nrow(wave2), "cases\n")
+rm(n_before_w1, n_before_w2)
 
 
 ### 12. Final inclusion: at least two of the three outcomes ------------------
@@ -579,6 +586,18 @@ print(outcome_counts)
 
 wave1 <- wave1 %>% filter(n_outcomes_completed >= 2)
 wave2 <- wave2 %>% filter(n_outcomes_completed >= 2)
+
+## 12.1 Final Wave 2 sample: items asked twice (section 5) and
+##      self-reported participation in the earlier wave
+cat("AttitudeEBMH4 asked twice - both versions answered:",
+    sum(!is.na(wave2$dup_AttitudeEBMH4_diff)),
+    "| different answers:", sum(wave2$dup_AttitudeEBMH4_diff > 0, na.rm = TRUE),
+    "| 2 or more points apart:", sum(wave2$dup_AttitudeEBMH4_diff >= 2, na.rm = TRUE), "\n")
+cat("UniversityEducation asked twice - both versions answered:",
+    sum(wave2$dup_UniversityEducation_both), "\n")
+cat("Participation in the previous study (Wave 2):\n")
+print(table(wave2$ParticipationPreviousStudy, useNA = "ifany"))
+wave2 <- wave2 %>% select(-dup_AttitudeEBMH4_diff, -dup_UniversityEducation_both)
 
 rm(count_outcomes)
 
