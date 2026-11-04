@@ -7,7 +7,8 @@ The study is an exploratory, preregistered online survey of 249 clinicians (psyc
 All study materials are on the Open Science Framework (OSF): https://osf.io/7eyra/
 
 - Preregistration: https://osf.io/wrp78/
-- Analysis plan (September 2025), documented deviations from the preregistration, an item-by-item comparison of both questionnaires, and results of earlier student projects with the Wave 1 data: folder `Supplementary Analysis and Method` on OSF
+- Analysis plan (September 2025), documented deviations from the preregistration, and an item-by-item comparison of both questionnaires: folder `Supplementary Analysis and Method` on OSF
+- Summary of earlier student projects with the data of both waves (five with Wave 1, one with Wave 2), listed in the preregistration to disclose our prior knowledge of the data: folder `Supplementary Analysis and Method` on OSF
 - Questionnaires (English, German, Dutch, with question numbers, survey flow and logic), participant information, informed consent, stopping rule (Wave 1), data management plan and recruitment texts (Wave 2): folders `Wave 1 Materials` and `Wave 2 Materials` on OSF
 - Data: shared after publication of the article (see *Data* below)
 
